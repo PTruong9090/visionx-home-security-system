@@ -6,7 +6,7 @@ class CameraCreate(BaseModel):
     name: str
     location: str | None = None
     rtsp_url: str
-    steam_key: str
+    stream_key: str
     recording_enabled: bool = True
 
 

@@ -1,7 +1,10 @@
 from fastapi import FastAPI
+from src.routers import cameras
 
-app = FastAPI()
+app = FastAPI(title="VisionX API")
 
-@app.get('/')
-async def root():
-    return {"message": "Hello World"}
+app.include_router(cameras.router)
+
+@app.get('/health')
+async def health_check():
+    return {'status': 'ok'}
