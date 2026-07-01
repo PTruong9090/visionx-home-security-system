@@ -11,7 +11,7 @@ from src.models.camera import Camera
 async def test_camera_connection(db: AsyncSession, camera_id: UUID):
     result = await db.execute(select(Camera).where(camera_id == Camera.id))
 
-    camera = result.scalar_one_or_none
+    camera = result.scalar_one_or_none()
 
     if not camera:
         raise HTTPException(

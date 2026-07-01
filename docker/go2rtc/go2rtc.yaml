@@ -1,0 +1,2 @@
+streams:
+  logitech_webcam: rtsp://host.docker.internal:8554/logitech

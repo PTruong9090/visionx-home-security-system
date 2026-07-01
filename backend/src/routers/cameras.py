@@ -51,9 +51,10 @@ async def get_cameras(db: AsyncSession = Depends(get_db)):
 
 @router.get('/{camera_id}', response_model=CameraResponse)
 async def get_camera(camera_id: UUID, db: AsyncSession = Depends(get_db)):
+
     result = await db.execute(select(Camera).where(camera_id == Camera.id))
 
-    camera = result.scalar_one_or_none
+    camera = result.scalar_one_or_none()
 
     if not camera:
         raise HTTPException(
@@ -89,7 +90,7 @@ async def update_camera(camera_id: UUID, payload: CameraUpdate, db: AsyncSession
 
 
 
-@router.delete('/{camera_id}', response_model=CameraResponse)
+@router.delete('/{camera_id}', status_code=status.HTTP_204_NO_CONTENT)
 async def delete_camera(camera_id: UUID, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Camera).where(Camera.id == camera_id))
 
