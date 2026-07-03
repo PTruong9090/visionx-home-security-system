@@ -15,3 +15,17 @@ ffmpeg `
   -rtsp_transport tcp `
   -f rtsp `
   rtsp://127.0.0.1:8554/logitech
+
+
+# Desktop (Logitech Camera)
+ffmpeg `
+  -f dshow `
+  -i video="HD Pro Webcam C920" `
+  -c:v libx264 `
+  -pix_fmt yuv420p `
+  -preset ultrafast `
+  -tune zerolatency `
+  -g 30 `
+  -rtsp_transport tcp `
+  -f rtsp `
+  rtsp://127.0.0.1:8554/logitech

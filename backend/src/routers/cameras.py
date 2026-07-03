@@ -1,4 +1,5 @@
 from uuid import UUID
+from slugify import slugify
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
@@ -29,7 +30,9 @@ async def create_camera(payload: CameraCreate, db: AsyncSession = Depends(get_db
             detail="Camera stream_key already exists",
         )
     
-    camera = Camera(**payload.model_dump())
+    camera = Camera(
+        **payload.model_dump(), 
+    )
 
     db.add(camera)
     await db.commit()
