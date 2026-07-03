@@ -1,0 +1,10 @@
+services:
+  visionx-go2rtc:
+    image: alexxit/go2rtc:latest
+    container_name: visionx-go2rtc
+    ports:
+      - "1984:1984"   # go2rtc web UI
+      - "8555:8554"   # optional RTSP output from go2rtc
+    volumes:
+      - ./docker/go2rtc/go2rtc.yaml:/config/go2rtc.yaml
+    restart: unless-stopped
