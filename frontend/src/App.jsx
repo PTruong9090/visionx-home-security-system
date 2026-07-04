@@ -1,12 +1,6 @@
-import { useState } from 'react'
-import DashboardPage from './pages/DashboardPage'
-import './App.css'
+import { RouterProvider } from "react-router-dom"
+import { router } from "./router"
 
-function App() {
-  
-  return (
-    <DashboardPage/>
-  )  
+export default function App() {
+    return <RouterProvider router={router} />
 }
-
-export default App
