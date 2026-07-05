@@ -1,6 +1,6 @@
 export default function MetricCard({ icon: Icon, title, value, description }) {
   return (
-    <div className="rounded-2xl border border-[#24313C] bg-[#111820] p-5">
+    <div className="rounded-2xl border border-[#24313C] bg-[#111820] p-5 overflow-hidden">
       <div className="flex items-center gap-3">
         <div className="flex bg-[#22C55E] h-7 w-7 items-center justify-center rounded-lg bg-[#16212B]">
           <Icon size={14}/>

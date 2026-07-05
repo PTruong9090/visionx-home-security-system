@@ -7,10 +7,17 @@ import { getCameras } from "../api/cameraAPI"
 
 import MetricCard from "../components/dashboard/MetricCard"
 import CameraCard from "../components/cameras/CameraCard"
+import RecentActivityPanel from "../components/dashboard/RecentActivityPanel"
 
 
 export default function DashboardPage() {
     const [cameras, setCameras] = useState([])
+
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState(null)
+
+    const totalCameras = cameras.length
+    const enabledCameras = cameras.filter((camera) => camera.enabled).length
 
     useEffect(() => {
         async function getAllCameras() {
@@ -49,8 +56,8 @@ export default function DashboardPage() {
                 <MetricCard
                 icon={Video}
                 title="Cameras Online"
-                value="6 / 8"
-                description="75% cameras online"
+                value={`${enabledCameras} / ${totalCameras}`}
+                description={`${enabledCameras/totalCameras * 100}% cameras online`}
                 />
 
                 <MetricCard
@@ -79,25 +86,33 @@ export default function DashboardPage() {
 
                 <div className="flex flex-1 flex-col gap-4">
                     <div className="flex flex-row justify-between items-center">
-                        <h2>Live Cameras</h2>
+                        <h2 className="font-semibold">Live Cameras</h2>
                         <NavLink to="/cameras" className='flex flex-row text-xs text-[#3B82F6] gap-2 items-center'>View all Cameras <MoveRight size={12}/></NavLink>
                     </div>
 
                     <div className="grid grid-cols-3 gap-5">
-                        {/* camera cards go here */}
-                        {cameras.map((camera) => (
-                            <CameraCard
-                                key={camera.id}
-                                name={camera.name}
-                                location={camera.location}
-                                status={camera.enabled}
-                            />
-                        ))}
+                        {cameras.length === 0 ? (
+                            <div>
+                                <p>No cameras added yet.</p>
+                                <p>Add your first RTSP camera to start monitoring.</p>
+                            </div>
+                        ) : (
+                            cameras.slice(0, 6).map((camera) => (
+                                <CameraCard
+                                    key={camera.id}
+                                    name={camera.name}
+                                    location={camera.location}
+                                    status={camera.enabled}
+                                />
+                            ))
+                        )
+                            
+                        }
                     </div>
                 </div>
 
                 <div className="w-1/3">
-                    {/* Recent Activity Card */}
+                    <RecentActivityPanel />
                 </div>
 
             </div>

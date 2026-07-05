@@ -9,7 +9,7 @@ export default function Sidebar() {
 
 
     return (
-        <aside className="w-[260px] min-h-screen flex flex-col bg-[#0A0E13] p-4">
+        <aside className="w-[220px] min-h-screen flex flex-col bg-[#0A0E13] p-4">
             <div className="m-6">
                 <h1 className="font-bold text-xl">VisionX</h1>
                 <p className="text-xs text-[#CBD5E1]">Home Security System</p>
