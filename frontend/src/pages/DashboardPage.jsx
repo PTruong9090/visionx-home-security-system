@@ -40,7 +40,7 @@ export default function DashboardPage() {
             <div className="flex flex-row justify-between">
                 <div className="flex flex-col">
                     <h1 className="font-semibold text-xl">Dashboard</h1>
-                    <p className="text-xs text-[#CBD5E1]">Overview of your security system</p>
+                    <p className="text-s text-[#CBD5E1]">Overview of your security system</p>
                 </div>
 
                 <div className="flex flex-row gap-10 items-center">
