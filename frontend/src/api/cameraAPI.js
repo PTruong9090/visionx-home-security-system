@@ -21,7 +21,7 @@ export function createCamera(camera)  {
 
 export function updateCamera(id, camera) {
     return request(`cameras/${id}`, {
-        method: 'PUT',
+        method: 'PATCH',
         body: JSON.stringify(camera)
     })
 }
