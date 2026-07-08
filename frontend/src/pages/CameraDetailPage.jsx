@@ -7,6 +7,7 @@ import EventsCard from "../components/cameraDetail/EventsCard"
 import OverviewCard from "../components/cameraDetail/OverviewCard"
 import HealthCard from "../components/cameraDetail/HealthCard"
 import InfoCard from "../components/cameraDetail/InfoCard"
+import CameraPlayer from "../components/cameraDetail/CameraPlayer"
 
 export default function CameraDetailPage() {
     const [camera, setCamera] = useState(null)
@@ -25,7 +26,6 @@ export default function CameraDetailPage() {
         async function fetchCamera(cameraId) {
             try {
                 const res = await getOneCamera(cameraId)
-                console.log(res)
                 setCamera(res)
 
             } catch (error) {
@@ -34,14 +34,14 @@ export default function CameraDetailPage() {
         }
 
         fetchCamera(cameraId)
-    }, [])
+    }, [cameraId])
 
     if (!camera) {
         return <p>Loading camera...</p>
     }
 
     return (
-        <div className="flex flex-col gap-4">
+        <div className="mx-auto w-full max-w-5xl flex flex-col gap-4">
 
             <div className="flex justify-between">
                 <h2 className="text-xl font-semibold">{camera?.name}</h2>
@@ -62,8 +62,10 @@ export default function CameraDetailPage() {
                 </div>
             </div>
 
-            <div className="rounded-md aspect-video w-3/4">
-                {/* Insert video player */}
+            <div className="rounded-md aspect-video w-4/5 mx-auto">
+                <CameraPlayer 
+                    camera={camera}
+                />
             </div>
 
             <div className="border-b border-[#1B2731]">

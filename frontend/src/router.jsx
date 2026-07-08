@@ -31,7 +31,7 @@ export const router = createBrowserRouter([
             },
             {
                 path: "cameras/new",
-                element: <CamerasPage />
+                element: <AddCameraPage />
             },
             {
                 path: "cameras/:cameraId",

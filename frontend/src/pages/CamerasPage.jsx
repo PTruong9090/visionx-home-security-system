@@ -12,7 +12,6 @@ export default function CamerasPage() {
     async function fetchCameras() {
         try {
             const res = await getCameras()
-            console.log(res)
             setCameras(res)
 
         } catch (error) {
@@ -24,7 +23,6 @@ export default function CamerasPage() {
         fetchCameras()
     }, [])
 
-    console.log("resrse", cameras)
 
     return (
         <div className="flex flex-col gap-8">
@@ -33,12 +31,12 @@ export default function CamerasPage() {
 
                 <div className="flex flex-col justify-center gap-1">
                     <h2 className="text-xl font-semibold">Cameras</h2>
-                    <p className="text-s text-[#CBD5E1]">Manage your camera streams</p>
+                    <p className="text-sm text-[#CBD5E1]">Manage your camera streams</p>
                 </div>
-                <button className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2 text-sm font-medium hover:bg-[#2563EB]">
+                <NavLink to="/cameras/new" className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2 text-sm font-medium hover:bg-[#2563EB]">
                     <Plus size={16} />
                     Add Camera
-                </button>
+                </NavLink>
             
             </div>
 
