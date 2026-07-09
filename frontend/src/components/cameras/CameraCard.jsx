@@ -1,12 +1,12 @@
-import { MoreVertical } from "lucide-react"
+import CamerasActionsMenu from "./CamerasActionsMenu"
 
-export default function CameraCard({name, location, status}) {
+export default function CameraCard({cameraId, name, location, status, onDelete}) {
     const isOn = status === true
 
     
     return (
-        <div className="rounded-2xl border border-[#24313C] bg-[#111820] overflow-hidden">
-            <div className="relative aspect-video bg-[#0B1117]">
+        <div className="rounded-2xl border border-[#24313C] bg-[#111820]">
+            <div className="rounded-2xl relative aspect-video bg-[#0B1117] overflow-hidden">
                 <div className="text-xs absolute left-3 top-3">
                     Live badge here
                 </div>
@@ -26,9 +26,10 @@ export default function CameraCard({name, location, status}) {
                     </div>
                 </div>
 
-                <button className="p-1 rounded-md hover:bg-[#1A2530]">
-                    <MoreVertical size={16} />
-                </button>
+                <CamerasActionsMenu 
+                    cameraId={cameraId}
+                    onDelete={onDelete}
+                />
                 
             </div>
         </div>
