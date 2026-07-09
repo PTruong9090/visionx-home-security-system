@@ -5,37 +5,41 @@ import { NavLink } from "react-router-dom"
 import { useState, useEffect } from "react"
 
 import { getCameras } from "../api/cameraAPI"
-import { deleteCamera } from "../api/cameraAPI"
 
 import MetricCard from "../components/dashboard/MetricCard"
 import CameraCard from "../components/cameras/CameraCard"
 import RecentActivityPanel from "../components/dashboard/RecentActivityPanel"
 import CamerasActionMenu from "../components/cameras/CamerasActionsMenu"
 
-import ConfirmDeleteModal from "../components/modals/ConfirmDeleteModal"
+import useCameraDelete from "../hooks/useCameraDelete"
+import CameraDeleteModal from "../components/modals/CameraDeleteModal"
+
+
 
 
 export default function DashboardPage() {
     const [cameras, setCameras] = useState([])
-    const [cameraToDelete, setCameraToDelete] = useState(null)
 
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
 
+    const { 
+        cameraToDelete,
+        isDeleting,
+        requestDelete,
+        cancelDelete,
+        confirmDelete,
+     } = useCameraDelete({
+        onDeleted: (deletedCamera) => {
+            setCameras(prevCameras => 
+                prevCameras.filter(camera => camera.id !== deletedCamera.id)
+            )
+        }
+     })
+
     const totalCameras = cameras.length
     const enabledCameras = cameras.filter((camera) => camera.enabled).length
 
-    async function handleDeleteCamera(cameraId) {
-        try {
-            await deleteCamera(cameraId)
-            setCameras(prevCameras => 
-                prevCameras.filter(camera => camera.id !== cameraId)
-            )
-
-        } catch (error) {
-            console.error("Failed to delete camera:", error)
-        }
-    }
 
     useEffect(() => {
         async function getAllCameras() {
@@ -125,7 +129,7 @@ export default function DashboardPage() {
                                     name={camera.name}
                                     location={camera.location}
                                     status={camera.enabled}
-                                    onDelete={() => setCameraToDelete(camera.id)}
+                                    onDelete={() => requestDelete(camera)}
                                 />
                             ))
                         )
@@ -133,23 +137,18 @@ export default function DashboardPage() {
                         }
                     </div>
                 </div>
+                <CameraDeleteModal
+                    camera={cameraToDelete}
+                    isDeleting={isDeleting}
+                    onCancel={cancelDelete}
+                    onConfirm={confirmDelete}
+                />
                 
                 <div className="w-1/3">
                     <RecentActivityPanel />
                 </div>
 
             </div>
-            {cameraToDelete && (
-                                <ConfirmDeleteModal
-                                    cameraName={cameraToDelete.name}
-                                    onCancel={() => setCameraToDelete(null)}
-                                    onConfirm={async () => {
-                                        await handleDeleteCamera(cameraToDelete.id)
-                                        setCameraToDelete(null)
-                                    }}
-                                />
-                            )}
-
         </div>
     )
 }

@@ -2,17 +2,30 @@ import { useState, useEffect } from "react"
 import { NavLink } from "react-router-dom"
 
 import { getCameras } from "../api/cameraAPI"
-import { deleteCamera } from "../api/cameraAPI"
 
 import { Plus, Trash } from "lucide-react"
 
-import ConfirmDeleteModal from "../components/modals/ConfirmDeleteModal"
+import useCameraDelete from "../hooks/useCameraDelete"
+import CameraDeleteModal from "../components/modals/CameraDeleteModal"
 
 
 
 export default function CamerasPage() {
     const [cameras, setCameras] = useState([])
-    const [cameraToDelete, setCameraToDelete] = useState(null)
+
+    const {
+        cameraToDelete,
+        isDeleting,
+        requestDelete,
+        cancelDelete,
+        confirmDelete,
+    } = useCameraDelete({
+        onDeleted: (deletedCamera) => {
+            setCameras(prevCameras =>
+                prevCameras.filter(camera => camera.id !== deletedCamera.id)
+            )
+        },
+    })
 
     async function fetchCameras() {
         try {
@@ -21,18 +34,6 @@ export default function CamerasPage() {
 
         } catch (error) {
             console.error("Failed to fetch cameras:", error)
-        }
-    }
-
-    async function handleDeleteCamera(cameraId) {
-        try {
-            await deleteCamera(cameraId)
-            setCameras(prevCameras => 
-                prevCameras.filter(camera => camera.id !== cameraId)
-            )
-
-        } catch (error) {
-            console.error("Failed to delete camera:", error)
         }
     }
 
@@ -104,7 +105,7 @@ export default function CamerasPage() {
                                         </NavLink>
 
                                         <button
-                                            onClick={() => setCameraToDelete(camera)}
+                                            onClick={() => requestDelete(camera)}
                                             className="rounded-lg border border-[#24313C] px-1 py-1 text-xs text-[#CBD5E1] hover:bg-[#16212B]"
                                         >
                                             <Trash size={18}/>
@@ -115,19 +116,15 @@ export default function CamerasPage() {
                         ))}
                     </tbody>
                 </table>
-                
-                {cameraToDelete && (
-                    <ConfirmDeleteModal
-                        cameraName={cameraToDelete.name}
-                        onCancel={() => setCameraToDelete(null)}
-                        onConfirm={async () => {
-                            await handleDeleteCamera(cameraToDelete.id)
-                            setCameraToDelete(null)
-                        }}
-                    />
-                )}
-
+                <CameraDeleteModal
+                    camera={cameraToDelete}
+                    isDeleting={isDeleting}
+                    onCancel={cancelDelete}
+                    onConfirm={confirmDelete}
+                />
             </div>
         </div>
+        
     )
 }
+
