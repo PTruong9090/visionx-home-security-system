@@ -1,3 +1,7 @@
+
+import { Video } from "lucide-react"
+
+
 export default function CameraPlayer({ camera }) {
   const isOnline = camera.enabled
 
@@ -17,8 +21,9 @@ export default function CameraPlayer({ camera }) {
           </div>
         </div>
 
-        <div className="flex h-full items-center justify-center text-sm text-[#64748B]">
-          Live stream preview
+        <div className="flex flex-col gap-1 h-full items-center justify-center text-sm text-[#64748B]">
+          <Video size={40} />
+          <p className="text-sm">Live stream preview</p>
         </div>
       </div>
     </div>
