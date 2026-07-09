@@ -8,6 +8,7 @@ import HealthPage from "./pages/HealthPage";
 import LoginPage from "./pages/LoginPage";
 import RecordingsPage from "./pages/RecordingsPage";
 import SettingsPage from "./pages/SettingsPage";
+import EditCameraPage from "./pages/EditCameraPage";
 
 import AppShell from "./layouts/AppShell";
 
@@ -32,6 +33,10 @@ export const router = createBrowserRouter([
             {
                 path: "cameras/new",
                 element: <AddCameraPage />
+            },
+            {
+                path: "cameras/:cameraId/edit",
+                element: <EditCameraPage />
             },
             {
                 path: "cameras/:cameraId",
