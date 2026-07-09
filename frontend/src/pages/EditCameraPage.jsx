@@ -1,10 +1,16 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
-import { createCamera } from "../api/cameraAPI"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
 
-export default function AddCameraPage() {
+import { updateCamera } from "../api/cameraAPI"
+import { getOneCamera } from "../api/cameraAPI"
+
+
+export default function EditCameraPage() {
     const navigate = useNavigate()
+
+    const { cameraId } = useParams()
+    const [camera, setCamera] = useState(null)
 
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [error, setError] = useState("")
@@ -20,8 +26,32 @@ export default function AddCameraPage() {
         health_check_enabled: true,
     })
 
+    useEffect(() => {
+        async function fetchCamera(cameraId) {
+            try {
+                const res = await getOneCamera(cameraId)
+                setCamera(res)
+                setFormData({
+                    name: res.name ?? "",
+                    location: res.location ?? "",
+                    rtsp_main_url: res.rtsp_main_url ?? "",
+                    rtsp_sub_url: res.rtsp_sub_url ?? "",
+                    stream_key: res.stream_key ?? "",
+                    enabled: res.enabled ?? true,
+                    recording_enabled: res.recording_enabled ?? true,
+                    health_check_enabled: res.health_check_enabled ?? true,
+                })
+
+            } catch (error) {
+                console.error(`Failed to fetch camera ${cameraId}`, error)
+            }
+        }
+
+        fetchCamera(cameraId)
+    }, [cameraId])
+
     function handleChange(e) {
-        const { name, value, type, checked} = e.target
+        const { name, value, type, checked } = e.target
 
         setFormData({
             ...formData,
@@ -33,19 +63,19 @@ export default function AddCameraPage() {
         e.preventDefault()
         
         try {
-            const res = await createCamera(formData)
-            console.log("Created camera:", res)
+            const res = await updateCamera(cameraId, formData)
+            console.log("Updated camera:", res)
             navigate("/cameras")
 
         } catch (error) {
-            console.error("Failed to create new camera:", error)
+            console.error(`Failed to update camera: ${cameraId}`, error)
         }
-
     }
+
     return (
         <div className="flex w-full flex-col gap-6">
             <div className="flex flex-col gap-1">
-                <h2 className="text-xl font-semibold">Add Camera</h2>
+                <h2 className="text-xl font-semibold">Edit Camera</h2>
                 <p className="text-sm text-[#CBD5E1]">Register a new RTSP camera stream</p>
             </div>
 
@@ -168,3 +198,6 @@ export default function AddCameraPage() {
         </div>
     )
 }
+
+// TODO: Consolidate into one page with add camera
+// TODO: Create separate form component
