@@ -1,23 +1,41 @@
 import { Bell, MoveRight, Video, HardDrive, Radio } from "lucide-react"
+import StatusDot from "../components/ui/StatusDot"
 
 import { NavLink } from "react-router-dom"
 import { useState, useEffect } from "react"
 
 import { getCameras } from "../api/cameraAPI"
+import { deleteCamera } from "../api/cameraAPI"
 
 import MetricCard from "../components/dashboard/MetricCard"
 import CameraCard from "../components/cameras/CameraCard"
 import RecentActivityPanel from "../components/dashboard/RecentActivityPanel"
+import CamerasActionMenu from "../components/cameras/CamerasActionsMenu"
+
+import ConfirmDeleteModal from "../components/modals/ConfirmDeleteModal"
 
 
 export default function DashboardPage() {
     const [cameras, setCameras] = useState([])
+    const [cameraToDelete, setCameraToDelete] = useState(null)
 
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
 
     const totalCameras = cameras.length
     const enabledCameras = cameras.filter((camera) => camera.enabled).length
+
+    async function handleDeleteCamera(cameraId) {
+        try {
+            await deleteCamera(cameraId)
+            setCameras(prevCameras => 
+                prevCameras.filter(camera => camera.id !== cameraId)
+            )
+
+        } catch (error) {
+            console.error("Failed to delete camera:", error)
+        }
+    }
 
     useEffect(() => {
         async function getAllCameras() {
@@ -44,7 +62,10 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="flex flex-row gap-10 items-center">
-                    <p className="text-xs">System Online</p>
+                    <p className="text-xs flex gap-1 items-center">
+                        <StatusDot active={true} />
+                        System Online
+                    </p>
 
                     <Bell size={18}/>
                     
@@ -57,7 +78,7 @@ export default function DashboardPage() {
                 icon={Video}
                 title="Cameras Online"
                 value={`${enabledCameras} / ${totalCameras}`}
-                description={`${enabledCameras/totalCameras * 100}% cameras online`}
+                description={`${enabledCameras / totalCameras * 100}% cameras online`}
                 />
 
                 <MetricCard
@@ -99,10 +120,12 @@ export default function DashboardPage() {
                         ) : (
                             cameras.slice(0, 6).map((camera) => (
                                 <CameraCard
+                                    cameraId={camera.id}
                                     key={camera.id}
                                     name={camera.name}
                                     location={camera.location}
                                     status={camera.enabled}
+                                    onDelete={() => setCameraToDelete(camera.id)}
                                 />
                             ))
                         )
@@ -110,12 +133,22 @@ export default function DashboardPage() {
                         }
                     </div>
                 </div>
-
+                
                 <div className="w-1/3">
                     <RecentActivityPanel />
                 </div>
 
             </div>
+            {cameraToDelete && (
+                                <ConfirmDeleteModal
+                                    cameraName={cameraToDelete.name}
+                                    onCancel={() => setCameraToDelete(null)}
+                                    onConfirm={async () => {
+                                        await handleDeleteCamera(cameraToDelete.id)
+                                        setCameraToDelete(null)
+                                    }}
+                                />
+                            )}
 
         </div>
     )
