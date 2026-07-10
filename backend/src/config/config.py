@@ -4,6 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class ENV(BaseSettings):
     DATABASE_URL: str
     ALEMBIC_DATABASE_URL: str
+    MEDIAMTX_WEBRTC_URL: str
 
     model_config = SettingsConfigDict(
         env_file=".env",
