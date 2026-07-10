@@ -1,16 +1,20 @@
 import CamerasActionsMenu from "./CamerasActionsMenu"
 
-export default function CameraCard({cameraId, name, location, status, onDelete}) {
-    const isOn = status === true
+import CameraPlayer from "../cameraDetail/CameraPlayer"
 
+export default function CameraCard({camera, name, location, status, onDelete}) {
+    const isOn = status === true
     
     return (
         <div className="rounded-2xl border border-[#24313C] bg-[#111820]">
-            <div className="rounded-2xl relative aspect-video bg-[#0B1117] overflow-hidden">
-                <div className="text-xs absolute left-3 top-3">
+            <div className="rounded-2xl relative aspect-video bg-[#0B1117]">
+                <div className="text-xs absolute left-1 top-1">
                     Live badge here
                 </div>
-                {/* Video preview goes here */}
+                <CameraPlayer
+                    camera={camera}
+                    streamURL="http://localhost:8889/logitech"
+                />
             </div>
 
             <div className="flex justify-between items-start p-4">
@@ -27,7 +31,7 @@ export default function CameraCard({cameraId, name, location, status, onDelete})
                 </div>
 
                 <CamerasActionsMenu 
-                    cameraId={cameraId}
+                    cameraId={camera.id}
                     onDelete={onDelete}
                 />
                 

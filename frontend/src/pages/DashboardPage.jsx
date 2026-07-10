@@ -10,6 +10,7 @@ import MetricCard from "../components/dashboard/MetricCard"
 import CameraCard from "../components/cameras/CameraCard"
 import RecentActivityPanel from "../components/dashboard/RecentActivityPanel"
 import CamerasActionMenu from "../components/cameras/CamerasActionsMenu"
+import CameraPlayer from "../components/cameraDetail/CameraPlayer"
 
 import useCameraDelete from "../hooks/useCameraDelete"
 import CameraDeleteModal from "../components/modals/CameraDeleteModal"
@@ -115,7 +116,7 @@ export default function DashboardPage() {
                         <NavLink to="/cameras" className='flex flex-row text-xs text-[#3B82F6] gap-2 items-center'>View all Cameras <MoveRight size={12}/></NavLink>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-5">
+                    <div className="grid grid-cols-2 gap-4">
                         {cameras.length === 0 ? (
                             <div>
                                 <p>No cameras added yet.</p>
@@ -124,7 +125,7 @@ export default function DashboardPage() {
                         ) : (
                             cameras.slice(0, 6).map((camera) => (
                                 <CameraCard
-                                    cameraId={camera.id}
+                                    camera={camera}
                                     key={camera.id}
                                     name={camera.name}
                                     location={camera.location}

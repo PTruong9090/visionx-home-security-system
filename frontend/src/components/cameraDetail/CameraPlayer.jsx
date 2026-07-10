@@ -2,8 +2,8 @@
 import { Video } from "lucide-react"
 
 
-export default function CameraPlayer({ camera }) {
-  const isOnline = camera.enabled
+export default function CameraPlayer({ camera, streamURL }) {
+  const isOnline = camera?.enabled
 
   return (
     <div className="overflow-hidden rounded-2xl border border-[#24313C] bg-black">
@@ -21,10 +21,21 @@ export default function CameraPlayer({ camera }) {
           </div>
         </div>
 
-        <div className="flex flex-col gap-1 h-full items-center justify-center text-sm text-[#64748B]">
-          <Video size={40} />
-          <p className="text-sm">Live stream preview</p>
-        </div>
+        {streamURL ? (
+          <iframe
+            src={streamURL}
+            title={`${camera.name} live stream`}
+            className="h-full w-full border-0"
+            allowFullScreen
+          />
+        ) : (
+          <div className="flex flex-col gap-1 h-full items-center justify-center text-sm text-[#64748B]">
+            <Video size={40} />
+            <p className="text-sm">Live stream preview</p>
+          </div>
+        )}
+
+        
       </div>
     </div>
   )
