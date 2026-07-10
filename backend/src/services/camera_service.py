@@ -22,10 +22,10 @@ async def test_camera_connection(db: AsyncSession, camera_id: UUID):
     start = time.time()
 
     # UNCOMMENT IN PRODUCTION
-    # cap = cv2.VideoCapture(camera.rtsp_url)
+    cap = cv2.VideoCapture(camera.rtsp_main_url)
     
     # Testing
-    cap = cv2.VideoCapture(0)
+    # cap = cv2.VideoCapture(0)
 
     ok = cap.isOpened()
 
