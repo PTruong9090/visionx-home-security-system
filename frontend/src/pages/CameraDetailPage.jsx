@@ -19,11 +19,11 @@ import CameraDeleteModal from "../components/modals/CameraDeleteModal"
 export default function CameraDetailPage() {
     const navigate = useNavigate()
 
-    const [camera, setCamera] = useState(null)
+    const [ camera, setCamera ] = useState(null)
     const { cameraId } = useParams()
     const [ activeTab, setActiveTab ] = useState("overview")
-    const [testing, setTesting] = useState(false)
-    const [testResult, setTestResult] = useState(null)
+    const [ testing, setTesting ] = useState(false)
+    const [ testResult, setTestResult ] = useState(null)
 
     const {
         cameraToDelete,
@@ -53,7 +53,7 @@ export default function CameraDetailPage() {
             const res = await testCamera(cameraId)
 
             setTestResult({
-                success: true,
+                success: res.status === "online" ? true : false,
                 message: res.message || "Camera connection successful.",
             })
 
@@ -118,6 +118,7 @@ export default function CameraDetailPage() {
             <div className="rounded-md aspect-video w-4/5 mx-auto">
                 <CameraPlayer 
                     camera={camera}
+                    streamURL="http://localhost:8889/logitech"
                 />
             </div>
 
