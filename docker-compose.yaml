@@ -3,8 +3,10 @@ services:
     image: alexxit/go2rtc:latest
     container_name: visionx-go2rtc
     ports:
-      - "1984:1984"   # go2rtc web UI
-      - "8555:8554"   # optional RTSP output from go2rtc
+      - "1984:1984"       # Web UI and API
+      - "8554:8554"       # RTSP restream
+      - "8555:8555/tcp"   # WebRTC
+      - "8555:8555/udp"   # WebRTC
     volumes:
       - ./docker/go2rtc/go2rtc.yaml:/config/go2rtc.yaml
     restart: unless-stopped
