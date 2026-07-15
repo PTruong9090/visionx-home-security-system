@@ -1,19 +1,34 @@
 import CamerasActionsMenu from "./CamerasActionsMenu"
 
+import { useState, useEffect } from "react"
+
+import { getStreamURL } from "../../api/cameraAPI"
+
 import CameraPlayer from "../cameraDetail/CameraPlayer"
 
 export default function CameraCard({camera, name, location, status, onDelete}) {
     const isOn = status === true
+    const [streamInfo, setStreamInfo] = useState(null)
+
+    useEffect(() => {
+        async function fetchStreamData() {
+            try {
+                const res = await getStreamURL(camera.id)
+                setStreamInfo(res)
+            } catch (error) {
+                console.error("Failed to fetch stream data", error)
+            }
+        }
+
+        fetchStreamData()
+    }, [camera.id])
     
     return (
         <div className="rounded-2xl border border-[#24313C] bg-[#111820]">
             <div className="rounded-2xl relative aspect-video bg-[#0B1117]">
-                <div className="text-xs absolute left-1 top-1">
-                    Live badge here
-                </div>
                 <CameraPlayer
                     camera={camera}
-                    streamURL="http://localhost:8889/logitech"
+                    streamURL={streamInfo?.sub_stream_url}
                 />
             </div>
 

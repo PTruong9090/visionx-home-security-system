@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from src.models.camera import Camera
+from src.config.config import env
 
 
 async def test_camera_connection(db: AsyncSession, camera_id: UUID):
@@ -67,6 +68,7 @@ async def get_camera_stream(db: AsyncSession, camera_id: UUID):
     
     return {
         "camera_id": camera.id,
-        "stream_url": f"/live/{camera.stream_key}",
+        "main_stream_url": f"{env.GO2RTC_PUBLIC_URL}/stream.html?src={camera.stream_key}_main&mode=webrtc",
+        "sub_stream_url": f"{env.GO2RTC_PUBLIC_URL}/stream.html?src={camera.stream_key}_sub&mode=webrtc",
         "stream_type": "webrtc",
     }

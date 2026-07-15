@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//home/ptruong9090/.claude/skills/**)"
+    ]
+  }
+}

@@ -1,9 +1,8 @@
-from urllib.parse import quote
-
 import httpx
+from src.config.config import env
 
 class Go2RTCService:
-    def __init__(self, base_url: str = "http://go2rtc:1984") -> None:
+    def __init__(self, base_url: str = env.GO2RTC_PUBLIC_URL) -> None:
         self.base_url = base_url.rstrip("/")
 
 
@@ -21,7 +20,7 @@ class Go2RTCService:
 
     async def update_stream(self, stream_key: str, rtsp_url: str) -> None:
         async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.patch(
+            response = await client.put(
                 f"{self.base_url}/api/streams",
                 params={
                     "name": stream_key,
@@ -42,3 +41,6 @@ class Go2RTCService:
             )
 
             response.raise_for_status()
+
+def get_go2rtc_service() -> Go2RTCService:
+    return Go2RTCService()

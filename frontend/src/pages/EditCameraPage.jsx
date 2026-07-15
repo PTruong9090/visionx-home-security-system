@@ -34,8 +34,8 @@ export default function EditCameraPage() {
                 setFormData({
                     name: res.name ?? "",
                     location: res.location ?? "",
-                    rtsp_main_url: res.rtsp_main_url ?? "",
-                    rtsp_sub_url: res.rtsp_sub_url ?? "",
+                    rtsp_main_url: "",
+                    rtsp_sub_url: "",
                     stream_key: res.stream_key ?? "",
                     enabled: res.enabled ?? true,
                     recording_enabled: res.recording_enabled ?? true,
@@ -62,9 +62,20 @@ export default function EditCameraPage() {
     async function handleSubmit(e) {
         e.preventDefault()
         
-        try {
+        const payload = {
+            ...formData,
+        }
+
+        if (!formData.rtsp_main_url?.trim()) {
+            delete payload.rtsp_main_url
+        }
+
+        if (!formData.rtsp_sub_url?.trim()) {
+            delete payload.rtsp_sub_url
+        }
+
+        try {    
             const res = await updateCamera(cameraId, formData)
-            console.log("Updated camera:", res)
             navigate("/cameras")
 
         } catch (error) {
@@ -128,18 +139,6 @@ export default function EditCameraPage() {
                             value={formData.rtsp_sub_url}
                             onChange={handleChange}
                             placeholder="rtsp://user:pass@192.168.1.50:554/stream2"
-                            className="h-10 rounded-lg border border-[#24313C] bg-[#0F1720] px-3 text-sm outline-none focus:border-[#3B82F6]"
-                        />
-                    </div>
-
-                    <div className="flex flex-col gap-2">
-                        <label htmlFor="stream_key" className="text-sm font-medium">Stream Key</label>
-                        <input
-                            id="stream_key"
-                            name="stream_key"
-                            value={formData.stream_key}
-                            onChange={handleChange}
-                            placeholder="front_door"
                             className="h-10 rounded-lg border border-[#24313C] bg-[#0F1720] px-3 text-sm outline-none focus:border-[#3B82F6]"
                         />
                     </div>

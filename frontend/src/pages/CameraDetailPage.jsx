@@ -1,9 +1,7 @@
-import { getOneCamera } from "../api/cameraAPI"
-
 import { useParams, NavLink, useNavigate } from "react-router-dom"
 import { useEffect, useState } from "react"
 
-import { testCamera } from "../api/cameraAPI"
+import { getOneCamera, testCamera, getStreamURL } from "../api/cameraAPI"
 
 import EventsCard from "../components/cameraDetail/EventsCard"
 import OverviewCard from "../components/cameraDetail/OverviewCard"
@@ -24,6 +22,7 @@ export default function CameraDetailPage() {
     const [ activeTab, setActiveTab ] = useState("overview")
     const [ testing, setTesting ] = useState(false)
     const [ testResult, setTestResult ] = useState(null)
+    const [ streamInfo, setStreamInfo ] = useState(null)
 
     const {
         cameraToDelete,
@@ -44,6 +43,7 @@ export default function CameraDetailPage() {
     const dotColor = isOnline ? "bg-green-500" : "bg-red-500"
 
     const isRecording = camera?.recording_enabled
+
 
     async function testCameraConnection() {
         setTesting(true)
@@ -73,17 +73,21 @@ export default function CameraDetailPage() {
     }
 
     useEffect(() => {
-        async function fetchCamera(cameraId) {
+        async function fetchCameraData(cameraId) {
             try {
-                const res = await getOneCamera(cameraId)
-                setCamera(res)
+                const [cameraResponse, streamResponse] = await Promise.all([
+                    getOneCamera(cameraId),
+                    getStreamURL(cameraId),
+                ])
+                setCamera(cameraResponse)
+                setStreamInfo(streamResponse)
 
             } catch (error) {
-                console.error("Failed to fetch camera:", error)
+                console.error("Failed to fetch camera data:", error)
             }
         }
 
-        fetchCamera(cameraId)
+        fetchCameraData(cameraId)
     }, [cameraId])
 
     if (!camera) {
@@ -118,7 +122,7 @@ export default function CameraDetailPage() {
             <div className="rounded-md aspect-video w-4/5 mx-auto">
                 <CameraPlayer 
                     camera={camera}
-                    streamURL="http://localhost:8889/logitech"
+                    streamURL={streamInfo?.main_stream_url}
                 />
             </div>
 

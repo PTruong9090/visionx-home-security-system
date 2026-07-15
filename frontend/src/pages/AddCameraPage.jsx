@@ -102,18 +102,6 @@ export default function AddCameraPage() {
                         />
                     </div>
 
-                    <div className="flex flex-col gap-2">
-                        <label htmlFor="stream_key" className="text-sm font-medium">Stream Key</label>
-                        <input
-                            id="stream_key"
-                            name="stream_key"
-                            value={formData.stream_key}
-                            onChange={handleChange}
-                            placeholder="front_door"
-                            className="h-10 rounded-lg border border-[#24313C] bg-[#0F1720] px-3 text-sm outline-none focus:border-[#3B82F6]"
-                        />
-                    </div>
-
                     <div className="flex flex-col gap-3">
                         <label className="flex items-center gap-2 text-sm">
                         <input

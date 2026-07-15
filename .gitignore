@@ -70,6 +70,11 @@ web_modules/
 .env.*
 !.env.example
 
+# go2rtc runtime config - go2rtc rewrites this file on disk when streams
+# are added/updated via its API, so it can contain live camera credentials
+docker/go2rtc/go2rtc.yaml
+!docker/go2rtc/go2rtc.yaml.example
+
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache

@@ -26,7 +26,7 @@ export default function Sidebar() {
                     Cameras
                 </NavLink>
 
-                <NavLink to="/recordings" className={navClass}>
+                {/* <NavLink to="/recordings" className={navClass}>
                     <FileVideo />
                     Recordings
                 </NavLink>
@@ -34,7 +34,7 @@ export default function Sidebar() {
                 <NavLink to="/health" className={navClass}>
                     <Heart />
                     Health
-                </NavLink>
+                </NavLink> */}
 
                 <NavLink to="/settings" className={navClass}>
                     <Settings />
