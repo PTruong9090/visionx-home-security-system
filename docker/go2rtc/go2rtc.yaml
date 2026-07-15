@@ -1,9 +1,0 @@
-streams:
-  logitech_webcam: 
-    - rtsp://host.docker.internal:8554/logitech
-
-  reolink_main:
-    - rtsp://admin:p_t4086005952@192.168.1.43:554/h264Preview_01_main
-
-  reolink_sub:
-    - rtsp://admin:4086005952@192.168.1.43:554/h264Preview_01_sub
