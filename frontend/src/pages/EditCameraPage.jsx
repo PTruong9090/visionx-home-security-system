@@ -75,7 +75,7 @@ export default function EditCameraPage() {
         }
 
         try {    
-            const res = await updateCamera(cameraId, formData)
+            const res = await updateCamera(cameraId, payload)
             navigate("/cameras")
 
         } catch (error) {
@@ -129,7 +129,11 @@ export default function EditCameraPage() {
                             placeholder="rtsp://user:pass@192.168.1.50:554/stream1"
                             className="h-10 rounded-lg border border-[#24313C] bg-[#0F1720] px-3 text-sm outline-none focus:border-[#3B82F6]"
                         />
+                        <p className="text-xs text-[#94A3B8]">
+                            Leave blank to keep the current main stream URL.
+                        </p>
                     </div>
+                    
 
                     <div className="flex flex-col gap-2">
                         <label htmlFor="rtsp_sub_url" className="text-sm font-medium">RTSP Sub URL</label>
@@ -141,6 +145,9 @@ export default function EditCameraPage() {
                             placeholder="rtsp://user:pass@192.168.1.50:554/stream2"
                             className="h-10 rounded-lg border border-[#24313C] bg-[#0F1720] px-3 text-sm outline-none focus:border-[#3B82F6]"
                         />
+                        <p className="text-xs text-[#94A3B8]">
+                            Leave blank to keep the current sub stream URL.
+                        </p>
                     </div>
 
                     <div className="flex flex-col gap-3">
