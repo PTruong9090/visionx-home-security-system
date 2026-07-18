@@ -152,4 +152,4 @@ __pycache__/
 
 backend.egg-info
 
-.claude/
+.claude/*
