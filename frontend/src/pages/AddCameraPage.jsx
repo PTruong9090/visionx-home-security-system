@@ -14,7 +14,6 @@ export default function AddCameraPage() {
         location: "",
         rtsp_main_url: "",
         rtsp_sub_url: "",
-        stream_key: "",
         enabled: true,
         recording_enabled: true,
         health_check_enabled: true,

@@ -1,20 +1,20 @@
 import AuthLayout from "../components/auths/AuthLayout"
 import AuthTabs from "../components/auths/AuthTabs"
-import LoginForm from "../components/auths/LoginForm"
+import SignupForm from "../components/auths/SignupForm"
 
-export default function LoginPage() {
+export default function SignupPage() {
     return (
         <AuthLayout>
-            <AuthTabs active="login" />
+            <AuthTabs active="signup" />
 
             <div className="mb-8 flex flex-col gap-1 text-center">
-                <h2 className="text-2xl font-semibold">Welcome back</h2>
+                <h2 className="text-2xl font-semibold">Create your account</h2>
                 <p className="text-sm text-[#94A3B8]">
-                    Sign in to access your VisionX dashboard.
+                    Set up VisionX to start monitoring your home.
                 </p>
             </div>
 
-            <LoginForm />
+            <SignupForm />
         </AuthLayout>
     )
 }
