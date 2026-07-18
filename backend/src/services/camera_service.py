@@ -1,5 +1,6 @@
 import time
 import cv2
+import asyncio
 from uuid import UUID
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -23,7 +24,7 @@ async def test_camera_connection(db: AsyncSession, camera_id: UUID):
     start = time.time()
 
     # UNCOMMENT IN PRODUCTION
-    cap = cv2.VideoCapture(camera.rtsp_main_url)
+    cap = await asyncio.to_thread(cv2.VideoCapture, camera.rtsp_sub_url)
     
     # Testing
     # cap = cv2.VideoCapture(0)
