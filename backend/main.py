@@ -1,12 +1,12 @@
 from fastapi import FastAPI
 from src.routers import cameras
 from fastapi.middleware.cors import CORSMiddleware
+from src.config.config import env
 
 app = FastAPI(title="VisionX API")
 
-origins = [
-    "http://localhost:5173"
-]
+origins = env.CORS_ALLOWED
+
 
 app.add_middleware(
     CORSMiddleware,

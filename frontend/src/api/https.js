@@ -11,6 +11,7 @@ export async function request(path, options={}) {
     const res = await fetch(`${normalizedURL}/api/v1${normalizedPath}`, {
         ...options,
         headers: {
+            'credentials': 'include',
             'Content-Type': 'application/json',
             ...(options.headers || {})
         }

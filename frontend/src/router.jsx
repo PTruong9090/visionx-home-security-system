@@ -6,6 +6,8 @@ import CamerasPage from "./pages/CamerasPage";
 import DashboardPage from "./pages/DashboardPage";
 import HealthPage from "./pages/HealthPage";
 import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import RecordingsPage from "./pages/RecordingsPage";
 import SettingsPage from "./pages/SettingsPage";
 import EditCameraPage from "./pages/EditCameraPage";
@@ -14,6 +16,18 @@ import AppShell from "./layouts/AppShell";
 
 
 export const router = createBrowserRouter([
+    {
+        path: "login",
+        element: <LoginPage />
+    },
+    {
+        path: "signup",
+        element: <SignupPage />
+    },
+    {
+        path: "forgot-password",
+        element: <ForgotPasswordPage />
+    },
     {
         path: '/',
         element: <AppShell />,
@@ -44,15 +58,15 @@ export const router = createBrowserRouter([
             },
             {
                 path: "recordings",
-                elements: <RecordingsPage />
+                element: <RecordingsPage />
             },
             {
                 path: "health",
-                elements: <HealthPage />
+                element: <HealthPage />
             },
             {
                 path: "settings",
-                elements: <SettingsPage />
+                element: <SettingsPage />
             }
         ]
     }

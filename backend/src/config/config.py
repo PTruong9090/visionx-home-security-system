@@ -5,6 +5,7 @@ class ENV(BaseSettings):
     DATABASE_URL: str
     ALEMBIC_DATABASE_URL: str
     GO2RTC_PUBLIC_URL: str
+    CORS_ALLOWED: list[str]
 
     model_config = SettingsConfigDict(
         env_file=".env",
