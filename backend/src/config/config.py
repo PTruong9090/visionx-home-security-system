@@ -6,6 +6,9 @@ class ENV(BaseSettings):
     ALEMBIC_DATABASE_URL: str
     GO2RTC_PUBLIC_URL: str
     CORS_ALLOWED: list[str]
+    JWT_SECRET_KEY: str
+    JWT_ALGORITHM: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
     model_config = SettingsConfigDict(
         env_file=".env",
