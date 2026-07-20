@@ -1,5 +1,6 @@
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Annotated
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,6 +15,6 @@ router = APIRouter(
     tags=["users"]
 )
 
-@router.get("/me", response_model=UserResponse, status_code=status.HTTP_200_OK)
-async def get_user(current_user: AsyncSession = Depends(get_current_user)):
+@router.get("/me", response_model=UserResponse)
+async def get_user(current_user: Annotated[User, Depends(get_current_user)]):
     return current_user

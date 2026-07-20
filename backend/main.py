@@ -1,7 +1,10 @@
-from fastapi import FastAPI
-from src.routers import cameras
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+
+from src.routers import cameras, auth, users
 from src.config.config import env
+from src.dependencies.auth import get_current_user
+
 
 app = FastAPI(title="VisionX API")
 
@@ -16,7 +19,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(cameras.router)
+app.include_router(auth.router)
+
+app.include_router(
+    cameras.router,
+    dependencies=[Depends(get_current_user)]
+    )
+
+app.include_router(
+    users.router,
+    dependencies=[Depends(get_current_user)]
+    )
 
 @app.get('/health')
 async def health_check():
