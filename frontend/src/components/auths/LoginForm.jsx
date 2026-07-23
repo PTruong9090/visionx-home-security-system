@@ -1,26 +1,56 @@
 import { useState } from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
+
 import { Mail, Lock, Eye, EyeOff, Grid3x3 } from "lucide-react"
 
+import { login } from "../../api/authAPI"
+
+
 export default function LoginForm() {
+    const navigate = useNavigate()
+
     const [formData, setFormData] = useState({
         email: "",
         password: "",
         rememberMe: true,
     })
     const [showPassword, setShowPassword] = useState(false)
+    const [isSubmitting, setIsSubmitting] = useState(false)
+    const [error, setError] = useState("")
 
     function handleChange(e) {
         const { name, value, type, checked } = e.target
 
-        setFormData({
-            ...formData,
+        setFormData((prevFormData) => ({
+            ...prevFormData,
             [name]: type === "checkbox" ? checked : value,
-        })
+        }))
     }
 
-    function handleSubmit(e) {
+    async function handleSubmit(e) {
         e.preventDefault()
+        setError("")
+        setIsSubmitting(true)
+
+        // TODO: Implement refresh token and use rememberMe
+        try {
+            await login({
+                email: formData.email,
+                password: formData.password
+            })
+
+            navigate('/dashboard')
+
+        } catch (error) {
+            setError(
+                error.message || 
+                "Unable to login. Please check your credentials"
+            )
+            console.error("Failed to login:", error)
+        } finally {
+            setIsSubmitting(false)
+        }
+        
     }
 
     return (
@@ -89,9 +119,16 @@ export default function LoginForm() {
                     Forgot password?
                 </Link>
             </div>
+            
+            {error && (
+                <p role="alert" className="text-sm text-red-600">
+                    {error}
+                </p>
+            )}
 
             <button
                 type="submit"
+                disabled={isSubmitting}
                 className="flex h-10 items-center justify-center gap-2 rounded-lg bg-[#3B82F6] text-sm font-medium text-white hover:bg-[#2563EB]"
             >
                 <Lock className="h-4 w-4" />

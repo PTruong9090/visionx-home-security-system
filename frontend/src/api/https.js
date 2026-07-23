@@ -8,10 +8,14 @@ export async function request(path, options={}) {
     const normalizedURL = normalizeBaseUrl(API_BASE_URL) 
     const normalizedPath = path.startsWith('/') ? path : `/${path}`
 
+    if (options.body && !(typeof options.body === 'string')) {
+        options.body = JSON.stringify(options.body)
+    }
+
     const res = await fetch(`${normalizedURL}/api/v1${normalizedPath}`, {
         ...options,
+        credentials: 'include',
         headers: {
-            'credentials': 'include',
             'Content-Type': 'application/json',
             ...(options.headers || {})
         }
@@ -24,7 +28,11 @@ export async function request(path, options={}) {
     }
 
     if (!res.ok) {
-        throw new Error(data?.message || 'Request failed')
+        const detail = data?.detail
+
+        const message = Array.isArray(detail) ? detail.map((error) => error.msg).join(', ') : detail
+
+        throw new Error(message || 'Request failed')
     }
 
     return data
