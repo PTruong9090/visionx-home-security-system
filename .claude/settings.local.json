@@ -6,7 +6,8 @@
       "Read(//home/ptruong9090/.claude/**)",
       "Bash(grep -rEo \"\\(bg|text|border|from|to|via|ring|accent|hover:bg|hover:text\\)-[a-z]+-[0-9]{2,3}\" src --include=\"*.jsx\" --include=\"*.js\")",
       "Bash(grep -rEo \"\\\\[#[0-9A-Fa-f]{3,8}\\\\]\" src --include=\"*.jsx\" --include=\"*.js\")",
-      "Bash(git -C ~/.claude rev-parse --is-inside-work-tree)"
+      "Bash(git -C ~/.claude rev-parse --is-inside-work-tree)",
+      "WebSearch"
     ]
   }
 }

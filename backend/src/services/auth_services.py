@@ -3,14 +3,9 @@ from datetime import datetime, timedelta, timezone
 
 from fastapi import HTTPException, status
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+import bcrypt
 
 from src.config.config import env
-
-password_context = CryptContext(
-    schemes=["bcrypt"],
-    deprecated="auto",
-)
 
 class AuthService:
     def create_access_token(self, user_id: UUID) -> str:
@@ -29,10 +24,11 @@ class AuthService:
 
 
     def hash_password(self, plain_password: str) -> str:
-        return password_context.hash(plain_password)
+        hashed_password = bcrypt.hashpw(plain_password.encode('utf-8'), bcrypt.gensalt())
+        return hashed_password.decode('utf-8')
     
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:
-        return password_context.verify(plain_password, hashed_password)
+        return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
 
     def decode_access_token(self, token: str) -> UUID:
         try:
