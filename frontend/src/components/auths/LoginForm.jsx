@@ -4,10 +4,12 @@ import { Link, useNavigate } from "react-router-dom"
 import { Mail, Lock, Eye, EyeOff, Grid3x3 } from "lucide-react"
 
 import { login } from "../../api/authAPI"
+import { useAuth } from "./AuthContext"
 
 
 export default function LoginForm() {
     const navigate = useNavigate()
+    const { setUser } = useAuth()
 
     const [formData, setFormData] = useState({
         email: "",
@@ -34,11 +36,12 @@ export default function LoginForm() {
 
         // TODO: Implement refresh token and use rememberMe
         try {
-            await login({
+            const res = await login({
                 email: formData.email,
                 password: formData.password
             })
 
+            setUser(res.user)
             navigate('/dashboard')
 
         } catch (error) {

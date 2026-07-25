@@ -4,6 +4,12 @@ export function normalizeBaseUrl(url) {
     return url.replace(/\/+$/, '')
 }
 
+let unAuthorizedHandler = null
+
+export function setOnUnAuthorized(handler) {
+    unAuthorizedHandler = handler
+}
+
 export async function request(path, options={}) {
     const normalizedURL = normalizeBaseUrl(API_BASE_URL) 
     const normalizedPath = path.startsWith('/') ? path : `/${path}`
@@ -28,6 +34,11 @@ export async function request(path, options={}) {
     }
 
     if (!res.ok) {
+
+        if (res.status === 401 && unAuthorizedHandler) {
+            unAuthorizedHandler()
+        }
+        
         const detail = data?.detail
 
         const message = Array.isArray(detail) ? detail.map((error) => error.msg).join(', ') : detail

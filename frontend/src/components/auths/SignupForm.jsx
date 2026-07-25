@@ -3,9 +3,11 @@ import { Link, useNavigate } from "react-router-dom"
 import { User, Mail, Lock, Eye, EyeOff } from "lucide-react"
 
 import { signup } from "../../api/authAPI"
+import { useAuth } from "./AuthContext"
 
 export default function SignupForm() {
     const navigate = useNavigate()
+    const { setUser } = useAuth()
 
     const [formData, setFormData] = useState({
         name: "",
@@ -60,12 +62,13 @@ export default function SignupForm() {
         setIsSubmitting(true)
 
         try {
-            await signup({
+            const res = await signup({
                 name: formData.name,
                 email : formData.email,
                 password: formData.password,
             })
 
+            setUser(res.user)
             navigate("/dashboard")
 
         } catch (error) {
