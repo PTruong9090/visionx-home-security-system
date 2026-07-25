@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom"
 import { House, Cctv, FileVideo, Settings, Heart} from "lucide-react"
+import UserCard from "../user/userCard"
 
 export default function Sidebar() {
     const navClass = ({ isActive }) =>
@@ -42,9 +43,8 @@ export default function Sidebar() {
                 </NavLink>
             </nav>
 
-            {/* TODO: User block/User profile */}
-            <div>
-
+            <div className="mt-auto">
+                <UserCard />
             </div>
             
             
