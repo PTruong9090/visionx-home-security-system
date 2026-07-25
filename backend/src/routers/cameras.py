@@ -8,9 +8,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.database import get_db
 from src.models.camera import Camera
 from src.schemas.camera import CameraCreate, CameraUpdate, CameraResponse
+from src.schemas.health import CameraHealthCheckResponse
 
 from src.services.stream_key_service import generate_stream_key
-from src.services.camera_service import test_camera_connection, get_camera_stream
+from src.services.camera_service import test_camera_connection, get_camera_stream, run_health_check
 from src.services.go2rtc_service import (
     Go2RTCService,
     get_go2rtc_service,
@@ -266,9 +267,9 @@ async def delete_camera(camera_id: UUID, db: AsyncSession = Depends(get_db), go2
 
 
 
-@router.post("/{camera_id}/test")
+@router.post("/{camera_id}/test", response_model=CameraHealthCheckResponse)
 async def test_camera(camera_id: UUID, db: AsyncSession = Depends(get_db)):
-    return await test_camera_connection(db, camera_id)
+    return await run_health_check(db, camera_id)
 
 
 @router.get("/{camera_id}/stream")
