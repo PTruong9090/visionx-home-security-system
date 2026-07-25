@@ -9,6 +9,7 @@ class ENV(BaseSettings):
     JWT_SECRET_KEY: str
     JWT_ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    HEALTH_CHECK_INTERVAL_SECONDS: int = 300
 
     model_config = SettingsConfigDict(
         env_file=".env",
