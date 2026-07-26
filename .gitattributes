@@ -1,0 +1,69 @@
+# Normalize line endings.
+#
+# The repository is stored with LF. Windows tooling had been rewriting files to
+# CRLF on save, which produced whole-file diffs (~8,800 insertions / 8,600
+# deletions across 84 files) with no actual content change and destroyed
+# git blame.
+#
+# `text=auto eol=lf` makes git store LF in the index and check LF out into the
+# working tree on every platform, so the churn cannot come back regardless of
+# which editor writes the file.
+
+* text=auto eol=lf
+
+# Windows-native scripts. PowerShell handles LF fine, but keep CRLF so the file
+# matches what Windows editors and signing tools expect.
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Shell scripts must stay LF or they will not execute.
+*.sh   text eol=lf
+*.bash text eol=lf
+
+# Explicit text types, so git never has to guess.
+*.py     text
+*.js     text
+*.jsx    text
+*.ts     text
+*.tsx    text
+*.css    text
+*.html   text
+*.json   text
+*.md     text
+*.yaml   text
+*.yml    text
+*.toml   text
+*.ini    text
+*.mako   text
+*.svg    text
+*.example text
+.env.example text
+
+# Binary. Never normalize, never try to diff as text.
+*.pdf  binary
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.webp binary
+*.mp4  binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.otf   binary
+*.db     binary
+*.sqlite binary
+*.pt   binary
+*.pth  binary
+*.onnx binary
+*.tflite binary
+
+# backend/requirements.txt is currently UTF-16LE, which normalization would
+# corrupt. Marked as binary until it is re-encoded to UTF-8.
+backend/requirements.txt binary
+
+# Lockfiles: keep them out of diffs and out of language stats.
+frontend/package-lock.json linguist-generated=true -diff
+backend/uv.lock            linguist-generated=true -diff
