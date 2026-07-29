@@ -9,8 +9,6 @@ import { getCameras } from "../api/cameraAPI"
 import MetricCard from "../components/dashboard/MetricCard"
 import CameraCard from "../components/cameras/CameraCard"
 import RecentActivityPanel from "../components/dashboard/RecentActivityPanel"
-import CamerasActionMenu from "../components/cameras/CamerasActionsMenu"
-import CameraPlayer from "../components/cameraDetail/CameraPlayer"
 
 import useCameraDelete from "../hooks/useCameraDelete"
 import CameraDeleteModal from "../components/modals/CameraDeleteModal"
@@ -48,8 +46,8 @@ export default function DashboardPage() {
                 const res = await getCameras()
                 setCameras(res)
 
-            } catch (error) {
-                console.error("Failed to fetch cameras:", error)
+            } catch (err) {
+                console.error("Failed to fetch cameras:", err)
             }
         }
 
@@ -68,7 +66,7 @@ export default function DashboardPage() {
 
                 <div className="flex flex-row gap-10 items-center">
                     <p className="text-xs flex gap-1 items-center">
-                        <StatusDot active={true} />
+                        <StatusDot status='online' />
                         System Online
                     </p>
 

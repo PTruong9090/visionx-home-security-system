@@ -1,7 +1,9 @@
 import { useParams, NavLink, useNavigate } from "react-router-dom"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 
 import { getOneCamera, testCamera, getStreamURL } from "../api/cameraAPI"
+import { getHealthCheck } from "../api/healthAPI"
+import { Spinner } from "../components/ui/Spinner"
 
 import EventsCard from "../components/cameraDetail/EventsCard"
 import OverviewCard from "../components/cameraDetail/OverviewCard"
@@ -13,16 +15,33 @@ import CameraActionsMenu from "../components/cameras/CamerasActionsMenu"
 import useCameraDelete from "../hooks/useCameraDelete"
 import CameraDeleteModal from "../components/modals/CameraDeleteModal"
 
+import StatusDot from "../components/ui/StatusDot"
+
 
 export default function CameraDetailPage() {
     const navigate = useNavigate()
 
+    const [ loading, setLoading ] = useState(true)
+
     const [ camera, setCamera ] = useState(null)
     const { cameraId } = useParams()
+    const [ cameraLoadError, setCameraLoadError ] = useState(null)
+
     const [ activeTab, setActiveTab ] = useState("overview")
+
     const [ testing, setTesting ] = useState(false)
     const [ testResult, setTestResult ] = useState(null)
     const [ streamInfo, setStreamInfo ] = useState(null)
+
+    const [ health, setHealth ] = useState(null)
+
+    const requestSeq = useRef(0)
+    const dismissTimer = useRef(null)
+
+    useEffect(() => {
+        return () => clearTimeout(dismissTimer.current)
+    }, [])
+
 
     const {
         cameraToDelete,
@@ -37,10 +56,7 @@ export default function CameraDetailPage() {
     })
 
 
-    const isOnline = camera?.enabled
-    const statusText = isOnline ? "Online" : "Offline"
-    const statusColor = isOnline ? "text-[#22C55E]" : "text-[#EF4444]"
-    const dotColor = isOnline ? "bg-green-500" : "bg-red-500"
+    const headerStatus = !camera?.enabled ? "disabled" : health?.status ?? "unknown"
 
     const isRecording = camera?.recording_enabled
 
@@ -49,13 +65,17 @@ export default function CameraDetailPage() {
         setTesting(true)
         setTestResult(null)
 
+
         try {
-            const res = await testCamera(cameraId)
+            const test_res = await testCamera(cameraId)
 
             setTestResult({
-                success: res.status === "online" ? true : false,
-                message: res.message || "Camera connection successful.",
+                success: test_res.status === "online",
+                message: test_res.message || "Camera connection successful.",
             })
+
+            setHealth(test_res)
+
 
         } catch (error) {
             console.error("Failed to test camera:", error)
@@ -66,32 +86,67 @@ export default function CameraDetailPage() {
             })
         } finally {
             setTesting(false)
-            setTimeout(() => {
-                setTestResult(null)
-            }, 3000)
+            clearTimeout(dismissTimer.current)
+            dismissTimer.current = setTimeout(() => setTestResult(null), 5000)
         }
     }
 
-    useEffect(() => {
-        async function fetchCameraData(cameraId) {
-            try {
-                const [cameraResponse, streamResponse] = await Promise.all([
-                    getOneCamera(cameraId),
-                    getStreamURL(cameraId),
-                ])
-                setCamera(cameraResponse)
-                setStreamInfo(streamResponse)
 
-            } catch (error) {
-                console.error("Failed to fetch camera data:", error)
+    useEffect(() => {
+        const controller = new AbortController()
+        const seq = ++requestSeq.current
+
+        async function fetchCameraData() {
+            setLoading(true)
+            setCameraLoadError(null)
+
+            const [cameraResponse, healthResponse, streamResponse] = await Promise.allSettled([
+                getOneCamera(cameraId, {signal: controller.signal} ),
+                getHealthCheck(cameraId, {signal: controller.signal} ),
+                getStreamURL(cameraId, {signal: controller.signal} ),
+            ])
+
+            if (seq !== requestSeq.current) return
+
+            if (controller.signal.aborted) return
+
+            if (cameraResponse.status === "fulfilled") {
+                setCamera(cameraResponse.value)
+            } else {
+                setCameraLoadError(cameraResponse.reason?.message ?? "Failed to load camera")
             }
+
+            if (healthResponse.status === "fulfilled") {
+                setHealth(healthResponse.value)
+            }
+
+            if (streamResponse.status === "fulfilled") {
+                setStreamInfo(streamResponse.value)
+            }
+
+            setLoading(false)
+            
         }
 
-        fetchCameraData(cameraId)
+        fetchCameraData()
+
+        return () => controller.abort()
     }, [cameraId])
 
-    if (!camera) {
-        return <p>Loading camera...</p>
+    if (cameraLoadError) {
+    return (
+        <div className="mx-auto flex max-w-md flex-col items-center gap-4 py-24 text-center">
+            <p className="text-sm font-medium text-[#F8FAFC]">Couldn't load this camera</p>
+            <p className="text-sm text-[#94A3B8]">{cameraLoadError}</p>
+            <NavLink to="/cameras" className="rounded-md bg-[#3B82F6] px-4 py-2 text-sm hover:bg-[#2563EB]">
+                Back to cameras
+            </NavLink>
+        </div>
+    )
+}
+
+    if (loading) {
+        return <Spinner />
     }
 
     return (
@@ -108,15 +163,14 @@ export default function CameraDetailPage() {
             <div className="flex gap-3 items-center">
                 <div className="text-sm text-[#CBD5E1]">{camera?.location}</div>
 
-                <div className={`p-2 flex items-center gap-1 ${statusColor}`}>
-                    <div className={`h-2 w-2 rounded-full ${dotColor}`} />
-                    <p className="text-sm">{statusText}</p>
-                </div>
+                <StatusDot status={headerStatus} showLabel={true} />
                 
-                <div className="flex items-center gap-1">
-                    <div className={` ${isRecording ? "h-2 w-2 rounded-full bg-orange-400" : ""}`}></div>
-                    <div className="text-sm">{isRecording ? "Recording" : ""}</div>
-                </div>
+                {isRecording && (
+                    <div className="flex items-center gap-1 text-[#FB923C]">
+                        <div className="h-2 w-2 rounded-full bg-orange-400" />
+                        <span className="text-sm">Recording</span>
+                    </div>
+                )}
             </div>
 
             <div className="rounded-md aspect-video w-4/5 mx-auto">
@@ -146,7 +200,7 @@ export default function CameraDetailPage() {
 
             {activeTab === "overview" && <OverviewCard camera={camera} />}
             {activeTab === "info" && <InfoCard camera={camera} />}
-            {activeTab === "health" && <HealthCard camera={camera} />}
+            {activeTab === "health" && <HealthCard health={health} />}
             {activeTab === "events" && <EventsCard camera={camera} />}
 
             <div className="flex gap-4 justify-end items-center mt-auto">

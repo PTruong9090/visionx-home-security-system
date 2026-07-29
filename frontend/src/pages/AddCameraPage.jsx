@@ -20,24 +20,29 @@ export default function AddCameraPage() {
     })
 
     function handleChange(e) {
+        setError("")
         const { name, value, type, checked} = e.target
 
-        setFormData({
-            ...formData,
+        setFormData(prevFormData => ({
+            ...prevFormData,
             [name]: type === "checkbox" ? checked : value
-        })
+        }))
     }
 
     async function handleSubmit(e) {
         e.preventDefault()
+        setIsSubmitting(true)
+        setError("")
         
         try {
-            const res = await createCamera(formData)
-            console.log("Created camera:", res)
+            await createCamera(formData)
             navigate("/cameras")
 
-        } catch (error) {
-            console.error("Failed to create new camera:", error)
+        } catch (err) {
+            console.error("Failed to create new camera:", err)
+            setError(err.message)
+        } finally {
+            setIsSubmitting(false)
         }
 
     }
@@ -132,12 +137,24 @@ export default function AddCameraPage() {
                         Health Check Enabled
                     </label>
                     </div>
+            
+                    {error && (
+                        <p className="text-sm text-red-400">
+                            {error}
+                        </p>
+                    )}
 
-                    <div className="flex justify-end gap-3 pt-4">
+                    <div className="flex justify-end gap-3 pt-4 items-center">
                         <button
+                            disabled={isSubmitting}
                             type="button"
                             onClick={() => navigate("/cameras")}
-                            className="rounded-lg border border-[#24313C] px-4 py-2 text-sm text-[#CBD5E1] hover:bg-[#16212B]"
+                            className="rounded-lg border border-[#24313C] px-4 py-2 text-sm text-[#CBD5E1] hover:bg-[#16212B] 
+                                disabled:cursor-not-allowed
+                                disabled:border-[#334155]
+                                disabled:bg-transparent
+                                disabled:text-[#64748B]
+                                disabled:hover:bg-transparent"
                         >
                             Cancel
                         </button>
@@ -145,7 +162,12 @@ export default function AddCameraPage() {
                         <button
                             disabled={isSubmitting}
                             type="submit"
-                            className="rounded-lg bg-[#3B82F6] px-4 py-2 text-sm font-medium text-white hover:bg-[#2563EB]"
+                            className="rounded-lg bg-[#3B82F6] px-4 py-2 text-sm font-medium text-white hover:bg-[#2563EB]
+                                disabled:cursor-not-allowed
+                                disabled:border-[#334155]
+                                disabled:bg-transparent
+                                disabled:text-[#64748B]
+                                disabled:hover:bg-transparent"
                         >
                             {isSubmitting ? "Saving..." : "Save Camera"}
                         </button>
