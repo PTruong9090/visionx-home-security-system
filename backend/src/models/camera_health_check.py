@@ -26,6 +26,6 @@ class CameraHealthCheck(Base):
     latency_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
     last_frame_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     last_recording_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    message: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     camera = relationship("Camera", back_populates="health_checks")
