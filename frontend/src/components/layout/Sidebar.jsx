@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom"
-import { House, Cctv, FileVideo, Settings, Heart} from "lucide-react"
+import { House, Cctv, Settings} from "lucide-react"
 import UserCard from "../user/userCard"
 
 export default function Sidebar() {

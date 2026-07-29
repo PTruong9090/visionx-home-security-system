@@ -10,6 +10,7 @@ class ENV(BaseSettings):
     JWT_ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     HEALTH_CHECK_INTERVAL_SECONDS: int = 300
+    RTSP_TIMEOUT_MS: int = 5000
 
     model_config = SettingsConfigDict(
         env_file=".env",

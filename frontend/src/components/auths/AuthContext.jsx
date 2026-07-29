@@ -32,7 +32,7 @@ export function AuthProvider({ children }) {
                 const res = await getUser()
                 setUser(res)
         
-            } catch (error) {
+            } catch {
                 setUser(null)
 
             } finally {

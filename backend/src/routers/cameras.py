@@ -11,7 +11,7 @@ from src.schemas.camera import CameraCreate, CameraUpdate, CameraResponse
 from src.schemas.health import CameraHealthCheckResponse
 
 from src.services.stream_key_service import generate_stream_key
-from src.services.camera_service import test_camera_connection, get_camera_stream, run_health_check
+from src.services.camera_service import get_camera_stream, run_health_check
 from src.services.go2rtc_service import (
     Go2RTCService,
     get_go2rtc_service,

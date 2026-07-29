@@ -6,9 +6,10 @@ export function getCameras() {
     })
 }
 
-export function getOneCamera(id) {
+export function getOneCamera(id, options = {}) {
     return request(`cameras/${id}`, {
-        method: 'GET'
+        method: 'GET',
+        ...options,
     })
 }
 
@@ -38,8 +39,9 @@ export function testCamera(id) {
     })
 }
 
-export function getStreamURL(id) {
+export function getStreamURL(id, options = {}) {
     return request(`cameras/${id}/stream`, {
-        method: 'GET'
+        method: 'GET',
+        ...options
     })
 }

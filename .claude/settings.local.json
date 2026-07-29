@@ -9,7 +9,13 @@
       "Bash(git -C ~/.claude rev-parse --is-inside-work-tree)",
       "WebSearch",
       "Bash(alembic current *)",
-      "Bash(uv run *)"
+      "Bash(uv run *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" --max-time 3 http://localhost:8000/health)",
+      "Read(//home/ptruong9090/career-ai/**)",
+      "Read(//home/ptruong9090/career-ai/interview-prep/**)",
+      "Bash(npx eslint *)",
+      "Bash(echo \"exit:$?\")",
+      "Bash(node *)"
     ]
   }
 }
