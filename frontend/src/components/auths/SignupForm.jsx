@@ -3,7 +3,9 @@ import { Link, useNavigate } from "react-router-dom"
 import { User, Mail, Lock, Eye, EyeOff } from "lucide-react"
 
 import { signup } from "../../api/authAPI"
-import { useAuth } from "./AuthContext"
+import { useAuth } from "../../hooks/useAuth";
+
+import { messageForError } from "../../api/errorMessage";
 
 export default function SignupForm() {
     const navigate = useNavigate()
@@ -72,7 +74,7 @@ export default function SignupForm() {
             navigate("/dashboard")
 
         } catch (error) {
-            setError(error.message || "Unable to create your account.")
+            setError(messageForError(err))
             console.error("Failed to signup", error)
 
         } finally {
