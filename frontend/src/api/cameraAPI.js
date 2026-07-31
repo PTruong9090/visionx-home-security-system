@@ -1,8 +1,9 @@
 import { request } from "./https";
 
-export function getCameras() {
+export function getCameras(options = {}) {
     return request('cameras', {
         method: 'GET',
+        ...options
     })
 }
 
