@@ -7,11 +7,14 @@ import { Plus, Trash } from "lucide-react"
 
 import useCameraDelete from "../hooks/useCameraDelete"
 import CameraDeleteModal from "../components/modals/CameraDeleteModal"
+import useResource from "../hooks/useResource"
+import { Spinner } from "../components/ui/Spinner"
 
 
 
 export default function CamerasPage() {
-    const [cameras, setCameras] = useState([])
+    const cameras = useResource(['cameras'], (o) => getCameras(o))
+    const cameraList = cameras.data ?? []
 
     const {
         cameraToDelete,
@@ -27,19 +30,13 @@ export default function CamerasPage() {
         },
     })
 
-    async function fetchCameras() {
-        try {
-            const res = await getCameras()
-            setCameras(res)
-
-        } catch (error) {
-            console.error("Failed to fetch cameras:", error)
-        }
+    if (cameras.loading) {
+        return <Spinner />
     }
 
-    useEffect(() => {
-        fetchCameras()
-    }, [])
+    if (cameras.error) {
+        return <p>{cameras.error}</p>
+    }
 
 
     return (
@@ -71,7 +68,7 @@ export default function CamerasPage() {
                     </thead>
 
                     <tbody>
-                        {cameras.map((camera) => (
+                        {cameraList.map((camera) => (
                             <tr
                                 key={camera.id}
                                 className="border-t border-[#1B2731] hover:bg-[#162128]"

@@ -6,8 +6,9 @@ import { getStreamURL } from "../../api/cameraAPI"
 
 import CameraPlayer from "../cameraDetail/CameraPlayer"
 
+import StatusDot from "../ui/StatusDot"
+
 export default function CameraCard({camera, name, location, status, onDelete}) {
-    const isOn = status === true
     const [streamInfo, setStreamInfo] = useState(null)
 
     useEffect(() => {
@@ -39,7 +40,7 @@ export default function CameraCard({camera, name, location, status, onDelete}) {
                     </p>
 
                     <div className="flex gap-1 items-center">
-                        <div className={`w-3 h-3 rounded-full ${isOn ? "bg-green-500" : "bg-red-500"}`} />
+                        <StatusDot status={status ? "enabled" : "disabled"}/>
 
                         <p className="text-xs text-[#CBD5E1]">{location}</p>
                     </div>

@@ -1,4 +1,5 @@
 import { formatRelativeTime, formatAbsoluteTime } from "../../utils/time"
+import { Spinner } from "../ui/Spinner"
 
 import StatusDot from "../ui/StatusDot"
 
@@ -14,7 +15,15 @@ function TimeValue({ value, emptyText }) {
 }
 
 
-export default function HealthCard({ health }) {
+export default function HealthCard({ health, loading, error }) {
+    if (loading) {
+        return <Spinner />
+    }
+
+    if (error) {
+        return <p className="mt-6 text-sm text-[#94A3B8]">{error}</p>
+    }
+
     if (!health) {
         return <p className="mt-6 text-sm text-[#94A3B8]">No health checks yet.</p>
     }

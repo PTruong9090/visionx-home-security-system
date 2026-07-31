@@ -17,25 +17,23 @@ import CameraDeleteModal from "../components/modals/CameraDeleteModal"
 
 import StatusDot from "../components/ui/StatusDot"
 
+import useResource from "../hooks/useResource"
+
 
 export default function CameraDetailPage() {
     const navigate = useNavigate()
 
-    const [ loading, setLoading ] = useState(true)
-
-    const [ camera, setCamera ] = useState(null)
     const { cameraId } = useParams()
-    const [ cameraLoadError, setCameraLoadError ] = useState(null)
+
+    const camera = useResource(['camera', cameraId], (o) => getOneCamera(cameraId, o))
+    const health = useResource(['health', cameraId], (o) => getHealthCheck(cameraId, o))
+    const stream = useResource(['stream', cameraId], (o) => getStreamURL(cameraId, o))
 
     const [ activeTab, setActiveTab ] = useState("overview")
 
     const [ testing, setTesting ] = useState(false)
     const [ testResult, setTestResult ] = useState(null)
-    const [ streamInfo, setStreamInfo ] = useState(null)
 
-    const [ health, setHealth ] = useState(null)
-
-    const requestSeq = useRef(0)
     const dismissTimer = useRef(null)
 
     useEffect(() => {
@@ -56,15 +54,14 @@ export default function CameraDetailPage() {
     })
 
 
-    const headerStatus = !camera?.enabled ? "disabled" : health?.status ?? "unknown"
+    const headerStatus = !camera.data?.enabled ? "disabled" : health.data?.status ?? "unknown"
 
-    const isRecording = camera?.recording_enabled
+    const isRecording = camera.data?.recording_enabled
 
 
     async function testCameraConnection() {
         setTesting(true)
         setTestResult(null)
-
 
         try {
             const test_res = await testCamera(cameraId)
@@ -74,7 +71,7 @@ export default function CameraDetailPage() {
                 message: test_res.message || "Camera connection successful.",
             })
 
-            setHealth(test_res)
+            health.reload()
 
 
         } catch (error) {
@@ -91,77 +88,35 @@ export default function CameraDetailPage() {
         }
     }
 
-
-    useEffect(() => {
-        const controller = new AbortController()
-        const seq = ++requestSeq.current
-
-        async function fetchCameraData() {
-            setLoading(true)
-            setCameraLoadError(null)
-
-            const [cameraResponse, healthResponse, streamResponse] = await Promise.allSettled([
-                getOneCamera(cameraId, {signal: controller.signal} ),
-                getHealthCheck(cameraId, {signal: controller.signal} ),
-                getStreamURL(cameraId, {signal: controller.signal} ),
-            ])
-
-            if (seq !== requestSeq.current) return
-
-            if (controller.signal.aborted) return
-
-            if (cameraResponse.status === "fulfilled") {
-                setCamera(cameraResponse.value)
-            } else {
-                setCameraLoadError(cameraResponse.reason?.message ?? "Failed to load camera")
-            }
-
-            if (healthResponse.status === "fulfilled") {
-                setHealth(healthResponse.value)
-            }
-
-            if (streamResponse.status === "fulfilled") {
-                setStreamInfo(streamResponse.value)
-            }
-
-            setLoading(false)
-            
-        }
-
-        fetchCameraData()
-
-        return () => controller.abort()
-    }, [cameraId])
-
-    if (cameraLoadError) {
-    return (
-        <div className="mx-auto flex max-w-md flex-col items-center gap-4 py-24 text-center">
-            <p className="text-sm font-medium text-[#F8FAFC]">Couldn't load this camera</p>
-            <p className="text-sm text-[#94A3B8]">{cameraLoadError}</p>
-            <NavLink to="/cameras" className="rounded-md bg-[#3B82F6] px-4 py-2 text-sm hover:bg-[#2563EB]">
-                Back to cameras
-            </NavLink>
-        </div>
-    )
-}
-
-    if (loading) {
+    if (camera.loading) {
         return <Spinner />
+    }
+
+    if (camera.error) {
+        return (
+            <div className="mx-auto flex max-w-md flex-col items-center gap-4 py-24 text-center">
+                <p className="text-sm font-medium text-[#F8FAFC]">Couldn't load this camera</p>
+                <p className="text-sm text-[#94A3B8]">{camera.error}</p>
+                <NavLink to="/cameras" className="rounded-md bg-[#3B82F6] px-4 py-2 text-sm hover:bg-[#2563EB]">
+                    Back to cameras
+                </NavLink>
+            </div>
+        )
     }
 
     return (
         <div className="mx-auto flex min-h-[calc(100vh-8rem)] w-full max-w-5xl flex-col gap-4">
 
             <div className="flex justify-between">
-                <h2 className="text-xl font-semibold">{camera?.name}</h2>
+                <h2 className="text-xl font-semibold">{camera.data?.name}</h2>
                 <CameraActionsMenu 
                     cameraId={cameraId}
-                    onDelete={() => requestDelete(camera)}
+                    onDelete={() => requestDelete(camera.data)}
                 />
             </div>
 
             <div className="flex gap-3 items-center">
-                <div className="text-sm text-[#CBD5E1]">{camera?.location}</div>
+                <div className="text-sm text-[#CBD5E1]">{camera.data?.location}</div>
 
                 <StatusDot status={headerStatus} showLabel={true} />
                 
@@ -175,8 +130,8 @@ export default function CameraDetailPage() {
 
             <div className="rounded-md aspect-video w-4/5 mx-auto">
                 <CameraPlayer 
-                    camera={camera}
-                    streamURL={streamInfo?.main_stream_url}
+                    camera={camera.data}
+                    streamURL={stream.data?.main_stream_url}
                 />
             </div>
 
@@ -198,10 +153,10 @@ export default function CameraDetailPage() {
                 </div>
             </div>
 
-            {activeTab === "overview" && <OverviewCard camera={camera} />}
-            {activeTab === "info" && <InfoCard camera={camera} />}
-            {activeTab === "health" && <HealthCard health={health} />}
-            {activeTab === "events" && <EventsCard camera={camera} />}
+            {activeTab === "overview" && <OverviewCard camera={camera.data} lastSeen={health.data?.last_frame_at}/>}
+            {activeTab === "info" && <InfoCard camera={camera.data} />}
+            {activeTab === "health" && <HealthCard health={health.data} loading={health.loading} error={health.error}/>}
+            {activeTab === "events" && <EventsCard camera={camera.data} />}
 
             <div className="flex gap-4 justify-end items-center mt-auto">
                 {testResult && (
@@ -214,7 +169,7 @@ export default function CameraDetailPage() {
                     <button 
                         disabled={testing}
                         onClick={testCameraConnection}
-                        className="px-4 py-3 rounded-md bg-[#3B82F6] hover:bg-[#2563EB]"
+                        className="px-4 py-3 rounded-md bg-[#3B82F6] hover:bg-[#2563EB] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#3B82F6]"
                     >
                             {testing ? "Testing..." : "Test Connection"}
                     </button>
