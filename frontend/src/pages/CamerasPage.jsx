@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react"
 import { NavLink } from "react-router-dom"
 
 import { getCameras } from "../api/cameraAPI"
@@ -24,7 +23,7 @@ export default function CamerasPage() {
         confirmDelete,
     } = useCameraDelete({
         onDeleted: (deletedCamera) => {
-            setCameras(prevCameras =>
+            cameras.setData(prevCameras =>
                 prevCameras.filter(camera => camera.id !== deletedCamera.id)
             )
         },
