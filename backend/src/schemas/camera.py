@@ -8,6 +8,8 @@ class CameraCreate(BaseModel):
     rtsp_main_url: str
     rtsp_sub_url: str | None = None
     recording_enabled: bool = True
+    enabled: bool
+    health_check_enabled: bool
 
 
 class CameraUpdate(BaseModel):
