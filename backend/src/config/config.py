@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import Literal
 
 
 class ENV(BaseSettings):
@@ -11,6 +12,10 @@ class ENV(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     HEALTH_CHECK_INTERVAL_SECONDS: int = 300
     RTSP_TIMEOUT_MS: int = 5000
+
+    COOKIE_SECURE: bool = True
+    COOKIE_SAMESITE: Literal["lax", "strict", "none"] = "lax"
+    COOKIE_DOMAIN: str | None = None
 
     model_config = SettingsConfigDict(
         env_file=".env",

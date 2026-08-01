@@ -12,12 +12,15 @@ from src.services.auth_services import AuthService
 
 from src.config.config import env
 
+from src.utils.cookies import Cookies
+
 router = APIRouter(
     prefix="/api/v1/auth",
     tags=["Auth"]
 )
 
 auth_service = AuthService()
+cookies = Cookies()
 
 
 @router.post('/login', response_model=AuthResponse, status_code=status.HTTP_200_OK)
@@ -47,14 +50,8 @@ async def login(data: LoginRequest, response: Response, db: AsyncSession = Depen
     
     access_token = auth_service.create_access_token(user.id)
 
-    response.set_cookie(
-        key="access_token",
-        value=access_token,
-        httponly=True,
-        secure=True,
-        samesite="lax",
-        max_age=env.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-    )
+    cookies.set_auth_cookies(response, access_token)
+    
 
     return AuthResponse(
         user=AuthUserResponse.model_validate(user)
@@ -85,14 +82,7 @@ async def signup(data: SignupRequest, response: Response, db: AsyncSession = Dep
 
     access_token = auth_service.create_access_token(user.id)
 
-    response.set_cookie(
-        key="access_token",
-        value=access_token,
-        httponly=True,
-        secure=True,
-        samesite="lax",
-        max_age=env.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-    )
+    cookies.set_auth_cookies(response, access_token)
 
     return AuthResponse(
         user=AuthUserResponse.model_validate(user)
@@ -101,6 +91,6 @@ async def signup(data: SignupRequest, response: Response, db: AsyncSession = Dep
 
 @router.post('/logout', status_code=status.HTTP_200_OK)
 async def logout(response: Response):
-    response.delete_cookie("access_token")
+    cookies.clear_auth_cookies()
 
     
