@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status, Response
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.schemas.auth import AuthResponse, LoginRequest, SignupRequest, AuthUserResponse, PasswordResetRequest
@@ -22,7 +22,9 @@ auth_service = AuthService()
 
 @router.post('/login', response_model=AuthResponse, status_code=status.HTTP_200_OK)
 async def login(data: LoginRequest, response: Response, db: AsyncSession = Depends(get_db)):
-    res = await db.execute(select(User).where(data.email == User.email))
+    normalized_email = data.email.strip().lower()
+
+    res = await db.execute(select(User).where(normalized_email == User.email))
     
     user = res.scalar_one_or_none()
 
