@@ -73,9 +73,9 @@ export default function SignupForm() {
             setUser(res.user)
             navigate("/dashboard")
 
-        } catch (error) {
+        } catch (err) {
             setError(messageForError(err))
-            console.error("Failed to signup", error)
+            console.error("Failed to signup", err)
 
         } finally {
             setIsSubmitting(false)
