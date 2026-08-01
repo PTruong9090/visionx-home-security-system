@@ -17,7 +17,7 @@ class Camera(Base):
     )
 
     name: Mapped[str] = mapped_column(String, nullable=False)
-    location: Mapped[str] = mapped_column(String, nullable=False)
+    location: Mapped[str] = mapped_column(String, nullable=True)
     rtsp_main_url: Mapped[str] = mapped_column(String, nullable=False)
     rtsp_sub_url: Mapped[str] = mapped_column(String, nullable=False)
     stream_key: Mapped[str] = mapped_column(String(100), nullable=False, unique=True, index=True)
