@@ -15,7 +15,13 @@
       "Read(//home/ptruong9090/career-ai/interview-prep/**)",
       "Bash(npx eslint *)",
       "Bash(echo \"exit:$?\")",
-      "Bash(node *)"
+      "Bash(node *)",
+      "Bash(.venv/bin/python -c ' *)",
+      "Bash(./.venv/Scripts/python.exe -c ' *)",
+      "Bash(./.venv/Scripts/python.exe -c \"import pydantic, pydantic_settings; print\\(pydantic.VERSION, pydantic_settings.__version__\\)\")",
+      "Bash(./.venv/Scripts/python.exe -c \"import src.routers.auth\")",
+      "Bash(COOKIE_SAMESITE=None COOKIE_SECURE=false ./.venv/Scripts/python.exe -c ' *)",
+      "Bash(COOKIE_SAMESITE=none COOKIE_SECURE=false ./.venv/Scripts/python.exe -c ' *)"
     ]
   }
 }

@@ -12,7 +12,7 @@ from src.services.auth_services import AuthService
 
 from src.config.config import env
 
-from src.utils.cookies import Cookies
+from src.utils.cookies import set_auth_cookies, clear_auth_cookies
 
 router = APIRouter(
     prefix="/api/v1/auth",
@@ -20,7 +20,7 @@ router = APIRouter(
 )
 
 auth_service = AuthService()
-cookies = Cookies()
+
 
 
 @router.post('/login', response_model=AuthResponse, status_code=status.HTTP_200_OK)
@@ -50,7 +50,7 @@ async def login(data: LoginRequest, response: Response, db: AsyncSession = Depen
     
     access_token = auth_service.create_access_token(user.id)
 
-    cookies.set_auth_cookies(response, access_token)
+    set_auth_cookies(response, access_token)
     
 
     return AuthResponse(
@@ -60,7 +60,8 @@ async def login(data: LoginRequest, response: Response, db: AsyncSession = Depen
 
 @router.post('/signup', response_model=AuthResponse, status_code=status.HTTP_201_CREATED)
 async def signup(data: SignupRequest, response: Response, db: AsyncSession = Depends(get_db)):
-    res = await db.execute(select(User).where(data.email.lower() == User.email))
+    normalized_email = data.email.strip().lower()
+    res = await db.execute(select(User).where(normalized_email == User.email))
 
     if res.scalar_one_or_none() is not None:
         raise HTTPException(
@@ -72,7 +73,7 @@ async def signup(data: SignupRequest, response: Response, db: AsyncSession = Dep
 
     user = User(
         display_name=data.name.strip(),
-        email=str(data.email).strip().lower(),
+        email=normalized_email,
         password_hash=hashed_password
     )
 
@@ -82,15 +83,15 @@ async def signup(data: SignupRequest, response: Response, db: AsyncSession = Dep
 
     access_token = auth_service.create_access_token(user.id)
 
-    cookies.set_auth_cookies(response, access_token)
+    set_auth_cookies(response, access_token)
 
     return AuthResponse(
         user=AuthUserResponse.model_validate(user)
     )
 
 
-@router.post('/logout', status_code=status.HTTP_200_OK)
+@router.post('/logout', status_code=status.HTTP_204_NO_CONTENT)
 async def logout(response: Response):
-    cookies.clear_auth_cookies()
+    clear_auth_cookies(response)
 
     
