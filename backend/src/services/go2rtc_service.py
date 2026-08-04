@@ -1,9 +1,20 @@
 import httpx
+from typing import Any
 from src.config.config import env
 
 class Go2RTCService:
     def __init__(self, base_url: str = env.GO2RTC_PUBLIC_URL) -> None:
         self.base_url = base_url.rstrip("/")
+
+    async def get_streams(self) -> dict[str, Any]:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(
+                f"{self.base_url}/api/streams"
+            )
+
+            response.raise_for_status()
+
+            return response.json()
 
 
     async def create_stream(self, stream_key: str, rtsp_url: str) -> None:
