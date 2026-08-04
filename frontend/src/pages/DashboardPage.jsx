@@ -72,7 +72,7 @@ export default function DashboardPage() {
                 icon={Video}
                 title="Cameras Online"
                 value={`${enabledCameras} / ${totalCameras}`}
-                description={`${totalCameras !== 0 ? Math.round(enabledCameras / totalCameras) * 100: 0}% cameras online`}
+                description={`${totalCameras !== 0 ? Math.round((enabledCameras / totalCameras) * 100): 0}% cameras online`}
                 />
 
                 <MetricCard
