@@ -1,35 +1,23 @@
 import CamerasActionsMenu from "./CamerasActionsMenu"
 
-import { useState, useEffect } from "react"
-
 import { getStreamURL } from "../../api/cameraAPI"
 
 import CameraPlayer from "../cameraDetail/CameraPlayer"
 
 import StatusDot from "../ui/StatusDot"
 
-export default function CameraCard({camera, name, location, status, onDelete}) {
-    const [streamInfo, setStreamInfo] = useState(null)
+import useResource from "../../hooks/useResource"
 
-    useEffect(() => {
-        async function fetchStreamData() {
-            try {
-                const res = await getStreamURL(camera.id)
-                setStreamInfo(res)
-            } catch (error) {
-                console.error("Failed to fetch stream data", error)
-            }
-        }
+export default function CameraCard({camera, name, location, onDelete}) {
+    const stream = useResource(["stream", camera.id], (o) => getStreamURL(camera.id, o), {enabled: camera.enabled === true})
 
-        fetchStreamData()
-    }, [camera.id])
     
     return (
         <div className="rounded-2xl border border-[#24313C] bg-[#111820]">
             <div className="rounded-2xl relative aspect-video bg-[#0B1117]">
                 <CameraPlayer
                     camera={camera}
-                    streamURL={streamInfo?.sub_stream_url}
+                    streamURL={stream.data?.sub_stream_url}
                 />
             </div>
 
@@ -40,7 +28,7 @@ export default function CameraCard({camera, name, location, status, onDelete}) {
                     </p>
 
                     <div className="flex gap-1 items-center">
-                        <StatusDot status={status ? "enabled" : "disabled"}/>
+                        <StatusDot status={camera.enabled ? "enabled" : "disabled"}/>
 
                         <p className="text-xs text-[#CBD5E1]">{location}</p>
                     </div>

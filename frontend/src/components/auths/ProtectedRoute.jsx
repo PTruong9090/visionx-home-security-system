@@ -1,10 +1,12 @@
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 
 import { useAuth } from "../../hooks/useAuth";
 
 import { Spinner } from "../ui/Spinner";
 
+
 export default function ProtectedRoute() {
+    const location = useLocation()
     const { user, isLoading, authError, retry } = useAuth()
 
     if (isLoading) {
@@ -30,7 +32,7 @@ export default function ProtectedRoute() {
     }
 
     if (!user) {
-        return <Navigate to="/login" replace/>
+        return <Navigate to='/login' state={{ from: location }} replace/>
     }
 
     return (

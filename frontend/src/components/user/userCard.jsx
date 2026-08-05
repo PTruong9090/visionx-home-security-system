@@ -22,7 +22,7 @@ export default function UserCard() {
             console.error("Failed to logout:", error)
         } finally {
             setUser(null)
-            navigate('/login')
+            navigate('/login', {replace: true})
         }
     }
 
