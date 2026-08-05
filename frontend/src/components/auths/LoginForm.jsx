@@ -7,6 +7,7 @@ import { login } from "../../api/authAPI"
 import { useAuth } from "../../hooks/useAuth";
 
 import { messageForError } from "../../api/errorMessage";
+import { resolveRedirect } from "../../utils/redirect";
 
 
 export default function LoginForm() {
@@ -46,8 +47,7 @@ export default function LoginForm() {
             })
 
             setUser(res.user)
-            const from = location.state?.from?.pathname || '/dashboard'
-            navigate(from, { replace: true })
+            navigate(resolveRedirect(location.state?.from), { replace: true })
 
         } catch (err) {
             setError(messageForError(err))
