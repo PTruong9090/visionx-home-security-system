@@ -1,20 +1,25 @@
 import { useState } from "react"
 import { deleteCamera } from "../api/cameraAPI"
+import { messageForError } from "../api/errorMessage"
 
 export default function useCameraDelete({ onDeleted } = {}) {
-    const [cameraToDelete, setCameraToDelete] = useState(null)
-    const [isDeleting, setIsDeleting] = useState(null)
+    const [ cameraToDelete, setCameraToDelete ] = useState(null)
+    const [ isDeleting, setIsDeleting ] = useState(false)
+    const [ deleteError, setDeleteError ] = useState("")
 
     function requestDelete(camera) {
+        setDeleteError("")
         setCameraToDelete(camera)
     }
 
     function cancelDelete() {
+        setDeleteError("")
         setCameraToDelete(null)
     }
 
     async function confirmDelete() {
         if (!cameraToDelete) return
+        setDeleteError("")
 
         try {
             setIsDeleting(true)
@@ -27,8 +32,9 @@ export default function useCameraDelete({ onDeleted } = {}) {
 
             setCameraToDelete(null)
 
-        } catch (error) {
-            console.error("Failed to delete camera:", error)
+        } catch (err) {
+            console.error("Failed to delete camera:", err)
+            setDeleteError(messageForError(err))
 
         } finally {
             setIsDeleting(false)
@@ -41,6 +47,7 @@ export default function useCameraDelete({ onDeleted } = {}) {
         requestDelete,
         cancelDelete,
         confirmDelete,
+        deleteError,
     }
 
 } 

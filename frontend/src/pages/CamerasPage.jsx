@@ -21,6 +21,7 @@ export default function CamerasPage() {
         requestDelete,
         cancelDelete,
         confirmDelete,
+        deleteError,
     } = useCameraDelete({
         onDeleted: (deletedCamera) => {
             cameras.setData(prevCameras =>
@@ -117,6 +118,7 @@ export default function CamerasPage() {
                     isDeleting={isDeleting}
                     onCancel={cancelDelete}
                     onConfirm={confirmDelete}
+                    deleteError={deleteError}
                 />
             </div>
         </div>

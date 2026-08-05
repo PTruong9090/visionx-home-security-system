@@ -27,6 +27,7 @@ export default function DashboardPage() {
         requestDelete,
         cancelDelete,
         confirmDelete,
+        deleteError,
      } = useCameraDelete({
         onDeleted: (deletedCamera) => {
             cameras.setData(prevCameras => 
@@ -118,7 +119,6 @@ export default function DashboardPage() {
                                     key={camera.id}
                                     name={camera.name}
                                     location={camera.location}
-                                    status={camera.enabled}
                                     onDelete={() => requestDelete(camera)}
                                 />
                             ))
@@ -132,6 +132,7 @@ export default function DashboardPage() {
                     isDeleting={isDeleting}
                     onCancel={cancelDelete}
                     onConfirm={confirmDelete}
+                    deleteError={deleteError}
                 />
                 
                 <div className="w-1/3">

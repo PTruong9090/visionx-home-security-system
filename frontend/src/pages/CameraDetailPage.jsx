@@ -26,8 +26,10 @@ export default function CameraDetailPage() {
     const { cameraId } = useParams()
 
     const camera = useResource(['camera', cameraId], (o) => getOneCamera(cameraId, o))
+    const isCameraEnabled = camera.data?.enabled === true
+
     const health = useResource(['health', cameraId], (o) => getHealthCheck(cameraId, o))
-    const stream = useResource(['stream', cameraId], (o) => getStreamURL(cameraId, o))
+    const stream = useResource(['stream', cameraId], (o) => getStreamURL(cameraId, o), { enabled: isCameraEnabled })
 
     const [ activeTab, setActiveTab ] = useState("overview")
 
@@ -47,6 +49,7 @@ export default function CameraDetailPage() {
         requestDelete,
         cancelDelete,
         confirmDelete,
+        deleteError,
     } = useCameraDelete({
         onDeleted: () => {
             navigate("/cameras")
@@ -183,6 +186,7 @@ export default function CameraDetailPage() {
                 isDeleting={isDeleting}
                 onCancel={cancelDelete}
                 onConfirm={confirmDelete}
+                deleteError={deleteError}
             />
 
         </div>
