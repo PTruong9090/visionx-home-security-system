@@ -24,8 +24,3 @@ class AuthUserResponse(BaseModel):
 
 class AuthResponse(BaseModel):
     user: AuthUserResponse
-
-
-class PasswordResetRequest(BaseModel):
-    token: str
-    new_password: str = Field(min_length=8, max_length=72)
