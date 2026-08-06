@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 import uuid
 from datetime import datetime
 
@@ -6,6 +9,11 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database import Base
+
+if TYPE_CHECKING:
+    from src.models.camera import Camera
+    from src.models.event import Event
+    from src.models.snapshot import Snapshot
 
 class Recording(Base):
     __tablename__ = "recordings"
@@ -18,7 +26,7 @@ class Recording(Base):
     
     camera_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("cameras.id", ondelete="cascade"),
+        ForeignKey("cameras.id", ondelete="CASCADE"),
         nullable=False,
         index=True
     )
@@ -42,6 +50,6 @@ class Recording(Base):
         nullable=False,
     )
 
-    camera = relationship("Camera", back_populates="recordings")
-    events = relationship("Event", back_populates="recording")
-    snapshots = relationship("Snapshot", back_populates="recording")
+    camera: Mapped[Camera] = relationship(back_populates="recordings")
+    events: Mapped[list[Event]] = relationship(back_populates="recording")
+    snapshots: Mapped[list[Snapshot]] = relationship(back_populates="recording")

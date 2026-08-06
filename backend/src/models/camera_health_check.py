@@ -1,12 +1,18 @@
+from __future__ import annotations
+
 import uuid
 from datetime import datetime
 import enum
+from typing import TYPE_CHECKING
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import DateTime, String, ForeignKey, Text, func, Integer, Enum
 from sqlalchemy.dialects.postgresql import UUID
 
 from src.database import Base
+
+if TYPE_CHECKING:
+    from src.models.camera import Camera
 
 class HealthStatusEnum(enum.Enum):
     online = "online"
@@ -28,4 +34,4 @@ class CameraHealthCheck(Base):
     last_recording_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     message: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    camera = relationship("Camera", back_populates="health_checks")
+    camera: Mapped[Camera] = relationship(back_populates="health_checks")
