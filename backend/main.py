@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-from src.routers import cameras, auth, users, health
+from src.routers import cameras, auth, users, health, reset_password
 from src.config.config import env
 from src.dependencies.auth import get_current_user
 
@@ -28,6 +28,7 @@ app.add_middleware(
 )
 
 app.include_router(auth.router)
+app.include_router(reset_password.router,)
 
 app.include_router(
     cameras.router,
@@ -43,6 +44,7 @@ app.include_router(
     health.router,
     dependencies=[Depends(get_current_user)]
 )
+
     
 @app.get('/health')
 async def health_check():
