@@ -153,3 +153,5 @@ __pycache__/
 backend.egg-info
 
 .claude/*
+
+MVP_CHECKLIST.md

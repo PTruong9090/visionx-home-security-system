@@ -2,27 +2,24 @@ import { Bell, MoveRight, Video, HardDrive, Radio } from "lucide-react"
 import StatusDot from "../components/ui/StatusDot"
 
 import { NavLink } from "react-router-dom"
-import { useState, useEffect } from "react"
 
 import { getCameras } from "../api/cameraAPI"
 
 import MetricCard from "../components/dashboard/MetricCard"
 import CameraCard from "../components/cameras/CameraCard"
 import RecentActivityPanel from "../components/dashboard/RecentActivityPanel"
-import CamerasActionMenu from "../components/cameras/CamerasActionsMenu"
-import CameraPlayer from "../components/cameraDetail/CameraPlayer"
 
 import useCameraDelete from "../hooks/useCameraDelete"
 import CameraDeleteModal from "../components/modals/CameraDeleteModal"
 
+import useResource from "../hooks/useResource"
 
+import { Spinner } from "../components/ui/Spinner"
 
 
 export default function DashboardPage() {
-    const [cameras, setCameras] = useState([])
-
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState(null)
+    const cameras = useResource(['cameras'], (o) => getCameras(o))
+    const cameraList = cameras.data ?? []
 
     const { 
         cameraToDelete,
@@ -30,32 +27,25 @@ export default function DashboardPage() {
         requestDelete,
         cancelDelete,
         confirmDelete,
+        deleteError,
      } = useCameraDelete({
         onDeleted: (deletedCamera) => {
-            setCameras(prevCameras => 
-                prevCameras.filter(camera => camera.id !== deletedCamera.id)
+            cameras.setData(prevCameras => 
+                (prevCameras ?? []).filter(camera => camera.id !== deletedCamera.id)
             )
         }
      })
 
-    const totalCameras = cameras.length
-    const enabledCameras = cameras.filter((camera) => camera.enabled).length
+    const totalCameras = cameraList.length
+    const enabledCameras = cameraList.filter((camera) => camera.enabled).length
 
+    if (cameras.loading) {
+        return <Spinner />
+    }
 
-    useEffect(() => {
-        async function getAllCameras() {
-            try {
-                const res = await getCameras()
-                setCameras(res)
-
-            } catch (error) {
-                console.error("Failed to fetch cameras:", error)
-            }
-        }
-
-        getAllCameras()
-
-    }, [])
+    if (cameras.error) {
+        return <p className="mt-6 text-sm text-[#94A3B8]">{cameras.error}</p>
+    }
 
     return (
         <div className="flex flex-col gap-6">
@@ -68,7 +58,7 @@ export default function DashboardPage() {
 
                 <div className="flex flex-row gap-10 items-center">
                     <p className="text-xs flex gap-1 items-center">
-                        <StatusDot active={true} />
+                        <StatusDot status='online' />
                         System Online
                     </p>
 
@@ -83,7 +73,7 @@ export default function DashboardPage() {
                 icon={Video}
                 title="Cameras Online"
                 value={`${enabledCameras} / ${totalCameras}`}
-                description={`${enabledCameras / totalCameras * 100}% cameras online`}
+                description={`${totalCameras !== 0 ? Math.round((enabledCameras / totalCameras) * 100): 0}% cameras online`}
                 />
 
                 <MetricCard
@@ -117,19 +107,18 @@ export default function DashboardPage() {
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
-                        {cameras.length === 0 ? (
+                        {cameraList.length === 0 ? (
                             <div>
                                 <p>No cameras added yet.</p>
                                 <p>Add your first RTSP camera to start monitoring.</p>
                             </div>
                         ) : (
-                            cameras.slice(0, 6).map((camera) => (
+                            cameraList.slice(0, 6).map((camera) => (
                                 <CameraCard
                                     camera={camera}
                                     key={camera.id}
                                     name={camera.name}
                                     location={camera.location}
-                                    status={camera.enabled}
                                     onDelete={() => requestDelete(camera)}
                                 />
                             ))
@@ -143,6 +132,7 @@ export default function DashboardPage() {
                     isDeleting={isDeleting}
                     onCancel={cancelDelete}
                     onConfirm={confirmDelete}
+                    deleteError={deleteError}
                 />
                 
                 <div className="w-1/3">

@@ -17,8 +17,16 @@ async def _probe_rtsp(camera: Camera):
     cap = None
 
     try:
-        # UNCOMMENT IN PRODUCTION
-        cap = await asyncio.to_thread(cv2.VideoCapture, camera.rtsp_sub_url)
+        # Production
+        cap = await asyncio.to_thread(
+            cv2.VideoCapture, 
+            camera.rtsp_sub_url, 
+            cv2.CAP_FFMPEG, 
+            [
+                cv2.CAP_PROP_OPEN_TIMEOUT_MSEC, env.RTSP_TIMEOUT_MS,
+                cv2.CAP_PROP_READ_TIMEOUT_MSEC, env.RTSP_TIMEOUT_MS
+            ]
+        )
         
         # Testing
         # cap = cv2.VideoCapture(0)
@@ -69,6 +77,9 @@ async def run_health_check(db: AsyncSession, camera_id: UUID) -> CameraHealthChe
 
     latency_ms = int((time.time() - start) * 1000)
 
+    if probe_res["status"] == "offline":
+        latency_ms = None
+
     recording_res = await db.execute(select(Recording.start_time).where(Recording.camera_id == camera.id).order_by(Recording.start_time.desc()).limit(1))
     last_recording_at = recording_res.scalar_one_or_none()
 
@@ -78,7 +89,7 @@ async def run_health_check(db: AsyncSession, camera_id: UUID) -> CameraHealthChe
         latency_ms=latency_ms,
         last_frame_at=probe_res.get("last_frame_at"),
         last_recording_at=last_recording_at,
-        error_message=probe_res["message"]
+        message=probe_res["message"]
     )
 
     db.add(health_check)
@@ -86,32 +97,6 @@ async def run_health_check(db: AsyncSession, camera_id: UUID) -> CameraHealthChe
     await db.refresh(health_check)
     
     return health_check
-
-
-
-async def test_camera_connection(db: AsyncSession, camera_id: UUID):
-    result = await db.execute(select(Camera).where(camera_id == Camera.id))
-
-    camera = result.scalar_one_or_none()
-
-    if not camera:
-        raise HTTPException(
-            status_code=404,
-            detail="Camera not found"
-        )
-
-    start = time.time()
-
-    probe_res = await _probe_rtsp(camera)
-
-    latency_ms = int((time.time() - start) * 1000)
-
-    return {
-        "camera_id": camera.id,
-        "status": probe_res["status"],
-        "latency_ms": latency_ms,
-        "message": probe_res["message"]
-    }
     
 
 

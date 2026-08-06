@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom"
 import { LogOut } from "lucide-react"
 
-import { useAuth } from "../auths/AuthContext"
+import { useAuth } from "../../hooks/useAuth";
 import { logout } from "../../api/authAPI"
 
 function getInitials(displayName) {
@@ -22,7 +22,7 @@ export default function UserCard() {
             console.error("Failed to logout:", error)
         } finally {
             setUser(null)
-            navigate('/login')
+            navigate('/login', {replace: true})
         }
     }
 

@@ -1,14 +1,19 @@
 import { useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { Link, useNavigate, useLocation } from "react-router-dom"
 
 import { Mail, Lock, Eye, EyeOff, Grid3x3 } from "lucide-react"
 
 import { login } from "../../api/authAPI"
-import { useAuth } from "./AuthContext"
+import { useAuth } from "../../hooks/useAuth";
+
+import { messageForError } from "../../api/errorMessage";
+import { resolveRedirect } from "../../utils/redirect";
 
 
 export default function LoginForm() {
     const navigate = useNavigate()
+    const location = useLocation()
+
     const { setUser } = useAuth()
 
     const [formData, setFormData] = useState({
@@ -42,14 +47,11 @@ export default function LoginForm() {
             })
 
             setUser(res.user)
-            navigate('/dashboard')
+            navigate(resolveRedirect(location.state?.from), { replace: true })
 
-        } catch (error) {
-            setError(
-                error.message || 
-                "Unable to login. Please check your credentials"
-            )
-            console.error("Failed to login:", error)
+        } catch (err) {
+            setError(messageForError(err))
+            console.error("Failed to login:", err)
         } finally {
             setIsSubmitting(false)
         }
@@ -65,6 +67,8 @@ export default function LoginForm() {
                 <div className="relative">
                     <Mail className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[#94A3B8]" />
                     <input
+                        required
+                        autoComplete="email"
                         id="email"
                         name="email"
                         type="email"
@@ -83,6 +87,8 @@ export default function LoginForm() {
                 <div className="relative">
                     <Lock className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[#94A3B8]" />
                     <input
+                        required
+                        autoComplete="current-password"
                         id="password"
                         name="password"
                         type={showPassword ? "text" : "password"}
@@ -124,7 +130,7 @@ export default function LoginForm() {
             </div>
             
             {error && (
-                <p role="alert" className="text-sm text-red-600">
+                <p role="alert" className="text-sm text-[#EF4444]">
                     {error}
                 </p>
             )}
@@ -132,10 +138,10 @@ export default function LoginForm() {
             <button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex h-10 items-center justify-center gap-2 rounded-lg bg-[#3B82F6] text-sm font-medium text-white hover:bg-[#2563EB]"
+                className="flex h-10 items-center justify-center gap-2 rounded-lg bg-[#3B82F6] text-sm font-medium text-white hover:bg-[#2563EB] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#3B82F6]"
             >
                 <Lock className="h-4 w-4" />
-                Sign In
+                {isSubmitting ? "Signing in..." : "Sign In"}
             </button>
 
             <div className="flex items-center gap-3">

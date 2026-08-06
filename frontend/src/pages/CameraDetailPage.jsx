@@ -1,7 +1,9 @@
 import { useParams, NavLink, useNavigate } from "react-router-dom"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 
 import { getOneCamera, testCamera, getStreamURL } from "../api/cameraAPI"
+import { getHealthCheck } from "../api/healthAPI"
+import { Spinner } from "../components/ui/Spinner"
 
 import EventsCard from "../components/cameraDetail/EventsCard"
 import OverviewCard from "../components/cameraDetail/OverviewCard"
@@ -13,16 +15,33 @@ import CameraActionsMenu from "../components/cameras/CamerasActionsMenu"
 import useCameraDelete from "../hooks/useCameraDelete"
 import CameraDeleteModal from "../components/modals/CameraDeleteModal"
 
+import StatusDot from "../components/ui/StatusDot"
+
+import useResource from "../hooks/useResource"
+
 
 export default function CameraDetailPage() {
     const navigate = useNavigate()
 
-    const [ camera, setCamera ] = useState(null)
     const { cameraId } = useParams()
+
+    const camera = useResource(['camera', cameraId], (o) => getOneCamera(cameraId, o))
+    const isCameraEnabled = camera.data?.enabled === true
+
+    const health = useResource(['health', cameraId], (o) => getHealthCheck(cameraId, o))
+    const stream = useResource(['stream', cameraId], (o) => getStreamURL(cameraId, o), { enabled: isCameraEnabled })
+
     const [ activeTab, setActiveTab ] = useState("overview")
+
     const [ testing, setTesting ] = useState(false)
     const [ testResult, setTestResult ] = useState(null)
-    const [ streamInfo, setStreamInfo ] = useState(null)
+
+    const dismissTimer = useRef(null)
+
+    useEffect(() => {
+        return () => clearTimeout(dismissTimer.current)
+    }, [])
+
 
     const {
         cameraToDelete,
@@ -30,6 +49,7 @@ export default function CameraDetailPage() {
         requestDelete,
         cancelDelete,
         confirmDelete,
+        deleteError,
     } = useCameraDelete({
         onDeleted: () => {
             navigate("/cameras")
@@ -37,12 +57,9 @@ export default function CameraDetailPage() {
     })
 
 
-    const isOnline = camera?.enabled
-    const statusText = isOnline ? "Online" : "Offline"
-    const statusColor = isOnline ? "text-[#22C55E]" : "text-[#EF4444]"
-    const dotColor = isOnline ? "bg-green-500" : "bg-red-500"
+    const headerStatus = !camera.data?.enabled ? "disabled" : health.data?.status ?? "unknown"
 
-    const isRecording = camera?.recording_enabled
+    const isRecording = camera.data?.recording_enabled
 
 
     async function testCameraConnection() {
@@ -50,12 +67,15 @@ export default function CameraDetailPage() {
         setTestResult(null)
 
         try {
-            const res = await testCamera(cameraId)
+            const test_res = await testCamera(cameraId)
 
             setTestResult({
-                success: res.status === "online" ? true : false,
-                message: res.message || "Camera connection successful.",
+                success: test_res.status === "online",
+                message: test_res.message || "Camera connection successful.",
             })
+
+            health.reload()
+
 
         } catch (error) {
             console.error("Failed to test camera:", error)
@@ -66,63 +86,55 @@ export default function CameraDetailPage() {
             })
         } finally {
             setTesting(false)
-            setTimeout(() => {
-                setTestResult(null)
-            }, 3000)
+            clearTimeout(dismissTimer.current)
+            dismissTimer.current = setTimeout(() => setTestResult(null), 5000)
         }
     }
 
-    useEffect(() => {
-        async function fetchCameraData(cameraId) {
-            try {
-                const [cameraResponse, streamResponse] = await Promise.all([
-                    getOneCamera(cameraId),
-                    getStreamURL(cameraId),
-                ])
-                setCamera(cameraResponse)
-                setStreamInfo(streamResponse)
+    if (camera.loading) {
+        return <Spinner />
+    }
 
-            } catch (error) {
-                console.error("Failed to fetch camera data:", error)
-            }
-        }
-
-        fetchCameraData(cameraId)
-    }, [cameraId])
-
-    if (!camera) {
-        return <p>Loading camera...</p>
+    if (camera.error) {
+        return (
+            <div className="mx-auto flex max-w-md flex-col items-center gap-4 py-24 text-center">
+                <p className="text-sm font-medium text-[#F8FAFC]">Couldn't load this camera</p>
+                <p className="text-sm text-[#94A3B8]">{camera.error}</p>
+                <NavLink to="/cameras" className="rounded-md bg-[#3B82F6] px-4 py-2 text-sm hover:bg-[#2563EB]">
+                    Back to cameras
+                </NavLink>
+            </div>
+        )
     }
 
     return (
         <div className="mx-auto flex min-h-[calc(100vh-8rem)] w-full max-w-5xl flex-col gap-4">
 
             <div className="flex justify-between">
-                <h2 className="text-xl font-semibold">{camera?.name}</h2>
+                <h2 className="text-xl font-semibold">{camera.data?.name}</h2>
                 <CameraActionsMenu 
                     cameraId={cameraId}
-                    onDelete={() => requestDelete(camera)}
+                    onDelete={() => requestDelete(camera.data)}
                 />
             </div>
 
             <div className="flex gap-3 items-center">
-                <div className="text-sm text-[#CBD5E1]">{camera?.location}</div>
+                <div className="text-sm text-[#CBD5E1]">{camera.data?.location}</div>
 
-                <div className={`p-2 flex items-center gap-1 ${statusColor}`}>
-                    <div className={`h-2 w-2 rounded-full ${dotColor}`} />
-                    <p className="text-sm">{statusText}</p>
-                </div>
+                <StatusDot status={headerStatus} showLabel={true} />
                 
-                <div className="flex items-center gap-1">
-                    <div className={` ${isRecording ? "h-2 w-2 rounded-full bg-orange-400" : ""}`}></div>
-                    <div className="text-sm">{isRecording ? "Recording" : ""}</div>
-                </div>
+                {isRecording && (
+                    <div className="flex items-center gap-1 text-[#FB923C]">
+                        <div className="h-2 w-2 rounded-full bg-orange-400" />
+                        <span className="text-sm">Recording</span>
+                    </div>
+                )}
             </div>
 
             <div className="rounded-md aspect-video w-4/5 mx-auto">
                 <CameraPlayer 
-                    camera={camera}
-                    streamURL={streamInfo?.main_stream_url}
+                    camera={camera.data}
+                    streamURL={stream.data?.main_stream_url}
                 />
             </div>
 
@@ -144,10 +156,10 @@ export default function CameraDetailPage() {
                 </div>
             </div>
 
-            {activeTab === "overview" && <OverviewCard camera={camera} />}
-            {activeTab === "info" && <InfoCard camera={camera} />}
-            {activeTab === "health" && <HealthCard camera={camera} />}
-            {activeTab === "events" && <EventsCard camera={camera} />}
+            {activeTab === "overview" && <OverviewCard camera={camera.data} lastSeen={health.data?.last_frame_at}/>}
+            {activeTab === "info" && <InfoCard camera={camera.data} />}
+            {activeTab === "health" && <HealthCard health={health.data} loading={health.loading} error={health.error}/>}
+            {activeTab === "events" && <EventsCard camera={camera.data} />}
 
             <div className="flex gap-4 justify-end items-center mt-auto">
                 {testResult && (
@@ -160,7 +172,7 @@ export default function CameraDetailPage() {
                     <button 
                         disabled={testing}
                         onClick={testCameraConnection}
-                        className="px-4 py-3 rounded-md bg-[#3B82F6] hover:bg-[#2563EB]"
+                        className="px-4 py-3 rounded-md bg-[#3B82F6] hover:bg-[#2563EB] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#3B82F6]"
                     >
                             {testing ? "Testing..." : "Test Connection"}
                     </button>
@@ -174,6 +186,7 @@ export default function CameraDetailPage() {
                 isDeleting={isDeleting}
                 onCancel={cancelDelete}
                 onConfirm={confirmDelete}
+                deleteError={deleteError}
             />
 
         </div>

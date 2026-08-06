@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react"
 import { NavLink } from "react-router-dom"
 
 import { getCameras } from "../api/cameraAPI"
@@ -7,11 +6,14 @@ import { Plus, Trash } from "lucide-react"
 
 import useCameraDelete from "../hooks/useCameraDelete"
 import CameraDeleteModal from "../components/modals/CameraDeleteModal"
+import useResource from "../hooks/useResource"
+import { Spinner } from "../components/ui/Spinner"
 
 
 
 export default function CamerasPage() {
-    const [cameras, setCameras] = useState([])
+    const cameras = useResource(['cameras'], (o) => getCameras(o))
+    const cameraList = cameras.data ?? []
 
     const {
         cameraToDelete,
@@ -19,27 +21,22 @@ export default function CamerasPage() {
         requestDelete,
         cancelDelete,
         confirmDelete,
+        deleteError,
     } = useCameraDelete({
         onDeleted: (deletedCamera) => {
-            setCameras(prevCameras =>
+            cameras.setData(prevCameras =>
                 prevCameras.filter(camera => camera.id !== deletedCamera.id)
             )
         },
     })
 
-    async function fetchCameras() {
-        try {
-            const res = await getCameras()
-            setCameras(res)
-
-        } catch (error) {
-            console.error("Failed to fetch cameras:", error)
-        }
+    if (cameras.loading) {
+        return <Spinner />
     }
 
-    useEffect(() => {
-        fetchCameras()
-    }, [])
+    if (cameras.error) {
+        return <p>{cameras.error}</p>
+    }
 
 
     return (
@@ -71,7 +68,7 @@ export default function CamerasPage() {
                     </thead>
 
                     <tbody>
-                        {cameras.map((camera) => (
+                        {cameraList.map((camera) => (
                             <tr
                                 key={camera.id}
                                 className="border-t border-[#1B2731] hover:bg-[#162128]"
@@ -121,6 +118,7 @@ export default function CamerasPage() {
                     isDeleting={isDeleting}
                     onCancel={cancelDelete}
                     onConfirm={confirmDelete}
+                    deleteError={deleteError}
                 />
             </div>
         </div>

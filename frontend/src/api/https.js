@@ -1,3 +1,6 @@
+import { ApiError } from "./ApiError"
+
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 export function normalizeBaseUrl(url) {
@@ -14,18 +17,16 @@ export async function request(path, options={}) {
     const normalizedURL = normalizeBaseUrl(API_BASE_URL) 
     const normalizedPath = path.startsWith('/') ? path : `/${path}`
 
-    if (options.body && !(typeof options.body === 'string')) {
-        options.body = JSON.stringify(options.body)
+    const { body, headers, skipAuthHandler, ...rest } = options
+
+    const init = {
+        ...rest,
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...headers },
+        body: typeof body === 'string' ? body : JSON.stringify(body)
     }
 
-    const res = await fetch(`${normalizedURL}/api/v1${normalizedPath}`, {
-        ...options,
-        credentials: 'include',
-        headers: {
-            'Content-Type': 'application/json',
-            ...(options.headers || {})
-        }
-    })
+    const res = await fetch(`${normalizedURL}/api/v1${normalizedPath}`, init)
 
     let data = null
 
@@ -35,15 +36,15 @@ export async function request(path, options={}) {
 
     if (!res.ok) {
 
-        if (res.status === 401 && unAuthorizedHandler) {
+        if (res.status === 401 && !skipAuthHandler && unAuthorizedHandler) {
             unAuthorizedHandler()
         }
-        
+
         const detail = data?.detail
 
         const message = Array.isArray(detail) ? detail.map((error) => error.msg).join(', ') : detail
 
-        throw new Error(message || 'Request failed')
+        throw new ApiError(message || 'Request failed', res.status)
     }
 
     return data

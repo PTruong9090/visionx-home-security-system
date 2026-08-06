@@ -1,6 +1,6 @@
 
 
-export default function CameraDeleteModal({ camera, isDeleting, onCancel, onConfirm }) {
+export default function CameraDeleteModal({ camera, isDeleting, onCancel, onConfirm, deleteError }) {
 
     if (!camera) return null
 
@@ -23,6 +23,10 @@ export default function CameraDeleteModal({ camera, isDeleting, onCancel, onConf
                     </span>
                     ? This action cannot be undone.
                 </p>
+
+                {deleteError && (
+                    <p role="alert" className="text-sm text-red-400 mt-4">{deleteError}</p>
+                )}
 
                 <div className="flex gap-3 justify-end mt-6">
                     <button

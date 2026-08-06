@@ -10,10 +10,10 @@ export default function EditCameraPage() {
     const navigate = useNavigate()
 
     const { cameraId } = useParams()
-    const [camera, setCamera] = useState(null)
 
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [error, setError] = useState("")
+    const [ loadError, setLoadError ] = useState("")
 
     const [formData, setFormData] = useState({
         name: "",
@@ -27,9 +27,11 @@ export default function EditCameraPage() {
 
     useEffect(() => {
         async function fetchCamera(cameraId) {
+            setLoadError("")
+
             try {
                 const res = await getOneCamera(cameraId)
-                setCamera(res)
+
                 setFormData({
                     name: res.name ?? "",
                     location: res.location ?? "",
@@ -40,8 +42,9 @@ export default function EditCameraPage() {
                     health_check_enabled: res.health_check_enabled ?? true,
                 })
 
-            } catch (error) {
-                console.error(`Failed to fetch camera ${cameraId}`, error)
+            } catch (err) {
+                console.error(`Failed to fetch camera ${cameraId}`, err)
+                setLoadError(err.message)
             }
         }
 
@@ -49,16 +52,19 @@ export default function EditCameraPage() {
     }, [cameraId])
 
     function handleChange(e) {
+        setError("")
         const { name, value, type, checked } = e.target
 
-        setFormData({
-            ...formData,
+        setFormData(prevFormData => ({
+            ...prevFormData,
             [name]: type === "checkbox" ? checked : value
-        })
+        }))
     }
 
     async function handleSubmit(e) {
         e.preventDefault()
+        setIsSubmitting(true)
+        setError('')
         
         const payload = {
             ...formData,
@@ -73,11 +79,15 @@ export default function EditCameraPage() {
         }
 
         try {    
-            const res = await updateCamera(cameraId, payload)
+            await updateCamera(cameraId, payload)
             navigate("/cameras")
 
-        } catch (error) {
-            console.error(`Failed to update camera: ${cameraId}`, error)
+        } catch (err) {
+            console.error(`Failed to update camera: ${cameraId}`, err)
+            setError(err.message)
+
+        } finally {
+            setIsSubmitting(false)
         }
     }
 
@@ -85,7 +95,7 @@ export default function EditCameraPage() {
         <div className="flex w-full flex-col gap-6">
             <div className="flex flex-col gap-1">
                 <h2 className="text-xl font-semibold">Edit Camera</h2>
-                <p className="text-sm text-[#CBD5E1]">Register a new RTSP camera stream</p>
+                <p className="text-sm text-[#CBD5E1]">Edit your camera settings</p>
             </div>
 
             <div className="mx-auto flex w-full max-w-3xl flex-col">
@@ -93,6 +103,12 @@ export default function EditCameraPage() {
                     onSubmit={handleSubmit}
                     className="flex flex-col gap-5 rounded-2xl border border-[#24313C] bg-[#111820] p-6"
                 >
+                    {loadError && (
+                        <p className="text-sm text-red-400">
+                            {loadError}
+                        </p>
+                    )}
+                    
                     <div className="flex flex-col gap-2">
                         <label htmlFor="name" className="text-sm font-medium">Camera Name</label>
                         <input
@@ -179,6 +195,12 @@ export default function EditCameraPage() {
                         Health Check Enabled
                     </label>
                     </div>
+
+                    {error && (
+                        <p className="text-sm text-red-400">
+                            {error}
+                        </p>
+                    )}
 
                     <div className="flex justify-end gap-3 pt-4">
                         <button

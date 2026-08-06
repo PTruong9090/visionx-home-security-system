@@ -1,5 +1,6 @@
 from uuid import UUID
 import httpx
+import logging
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
@@ -11,7 +12,7 @@ from src.schemas.camera import CameraCreate, CameraUpdate, CameraResponse
 from src.schemas.health import CameraHealthCheckResponse
 
 from src.services.stream_key_service import generate_stream_key
-from src.services.camera_service import test_camera_connection, get_camera_stream, run_health_check
+from src.services.camera_service import get_camera_stream, run_health_check
 from src.services.go2rtc_service import (
     Go2RTCService,
     get_go2rtc_service,
@@ -21,6 +22,8 @@ router = APIRouter(
     prefix="/api/v1/cameras",
     tags=["cameras"]
 )
+
+logger = logging.getLogger(__name__)
 
 async def cleanup_partial_streams(go2rtc, camera, main_created, sub_created):
     if sub_created:
@@ -222,7 +225,7 @@ async def update_camera(camera_id: UUID, payload: CameraUpdate, db: AsyncSession
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to update camera"
-        )
+        ) from exc
 
 
 
@@ -239,31 +242,41 @@ async def delete_camera(camera_id: UUID, db: AsyncSession = Depends(get_db), go2
         )
     
     try:
-        await go2rtc.delete_stream(f"{camera.stream_key}_main")
-
-        if camera.rtsp_sub_url:
-            await go2rtc.delete_stream(f"{camera.stream_key}_sub")
-
         await db.delete(camera)
         await db.commit()
 
-        return None
-
-    except httpx.HTTPError as exc:
-        await db.rollback()
-
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="Failed to delete camera from go2rtc"
-        ) from exc
-    
-    except Exception as exc:
+    except Exception:
         await db.rollback()
 
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to delete camera"
         )
+
+    try:
+        main_stream_key = f"{camera.stream_key}_main"
+        sub_stream_key = (
+            f"{camera.stream_key}_sub"
+            if camera.rtsp_sub_url
+            else None
+        )
+
+        await go2rtc.delete_stream(main_stream_key)
+
+        if sub_stream_key:
+            await go2rtc.delete_stream(sub_stream_key)
+
+
+    except httpx.HTTPError:
+        logger.warning(
+            "orphaned-go2rtc-streams camera_id=%s main_stream=%s sub_stream=%s",
+            camera.id,
+            main_stream_key,
+            sub_stream_key,
+            exc_info=True,
+        )
+
+    return None
 
 
 
