@@ -19,4 +19,5 @@ dependencies = [
     "sqlalchemy>=2.0.51",
     "uvicorn>=0.51.0",
     "apscheduler>=3.11.3",
+    "aiosmtplib>=5.1.2",
 ]

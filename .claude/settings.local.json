@@ -21,7 +21,24 @@
       "Bash(./.venv/Scripts/python.exe -c \"import pydantic, pydantic_settings; print\\(pydantic.VERSION, pydantic_settings.__version__\\)\")",
       "Bash(./.venv/Scripts/python.exe -c \"import src.routers.auth\")",
       "Bash(COOKIE_SAMESITE=None COOKIE_SECURE=false ./.venv/Scripts/python.exe -c ' *)",
-      "Bash(COOKIE_SAMESITE=none COOKIE_SECURE=false ./.venv/Scripts/python.exe -c ' *)"
+      "Bash(COOKIE_SAMESITE=none COOKIE_SECURE=false ./.venv/Scripts/python.exe -c ' *)",
+      "Bash(echo \"--- exit $? ---\")",
+      "WebFetch(domain:pypi.org)",
+      "Read(//tmp/**)",
+      "Bash(curl -s https://pypi.org/pypi/fastapi-mail/json)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(d['info']['requires_dist']\\)\")",
+      "WebFetch(domain:aiosmtplib.readthedocs.io)",
+      "Bash(pip download *)",
+      "Bash(python3 -c ' *)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(gh api *)",
+      "WebFetch(domain:github.com)",
+      "Bash(command -v python3)",
+      "Read(//home/ptruong9090/.local/bin/**)",
+      "Bash(python3 -c \"import pydantic; print\\(pydantic.VERSION\\)\")",
+      "Bash(python3 t.py)",
+      "Bash(docker compose *)",
+      "Bash(echo \"exit=$?\")"
     ]
   }
 }

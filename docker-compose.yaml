@@ -4,9 +4,21 @@ services:
     container_name: visionx-go2rtc
     ports:
       - "1984:1984"       # Web UI and API
-      - "8554:8554"       # RTSP restream
+      - "8654:8554"       # RTSP restream
       - "8555:8555/tcp"   # WebRTC
       - "8555:8555/udp"   # WebRTC
     volumes:
       - ./docker/go2rtc/go2rtc.yaml:/config/go2rtc.yaml
     restart: unless-stopped
+
+  mailpit:
+    image: axllent/mailpit
+    container_name: visionx-mailpit
+    profiles:
+      - dev
+    restart: unless-stopped
+    ports:
+      - 8025:8025
+      - 1025:1025
+    environment:
+      MP_MAX_MESSAGES: 5000

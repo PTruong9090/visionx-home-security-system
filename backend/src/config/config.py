@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import field_validator, model_validator
+from pydantic import field_validator, model_validator, EmailStr
 from typing import Literal
 
 
@@ -18,6 +18,17 @@ class ENV(BaseSettings):
     COOKIE_SECURE: bool = True
     COOKIE_SAMESITE: Literal["lax", "strict", "none"] = "lax"
     COOKIE_DOMAIN: str | None = None
+
+    RESET_TOKEN_EXPIRE_MINUTES: int = 15
+    FRONTEND_URL: str
+    SMTP_HOST: str
+    SMTP_PORT: int = 587
+    SMTP_USERNAME: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM_EMAIL: EmailStr
+    SMTP_FROM_NAME: str = "VisionX"
+    SMTP_STARTTLS: bool = True
+    SMTP_USETLS: bool = False
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -40,12 +51,39 @@ class ENV(BaseSettings):
             return v.strip().lower()
 
         return v
+
+    @field_validator("SMTP_USERNAME", "SMTP_PASSWORD", mode="before")
+    @classmethod
+    def _strip_credentials(cls, v: str | None) -> str | None:
+        if isinstance(v, str):
+            return v.strip()
+        
+        return v
     
     @model_validator(mode="after")
     def _check_cookie_flags(self):
         if self.COOKIE_SAMESITE == "none" and not self.COOKIE_SECURE:
-            raise ValueError("COOKIE_SECURE can't be false when COOKIE_SAMESITE is None")
+            raise ValueError("COOKIE_SECURE can't be false when COOKIE_SAMESITE is none")
 
         return self
+
+    @model_validator(mode="after")
+    def _check_smtp_tls(self):
+
+        if self.SMTP_STARTTLS and self.SMTP_PORT == 465:
+            raise ValueError("SMTP_PORT cannot be 465 when using STARTTLS")
+
+        if not self.SMTP_STARTTLS and (self.SMTP_USERNAME or self.SMTP_PASSWORD):
+            raise ValueError("TLS is off, leave both credentials empty")
+
+        if bool(self.SMTP_USERNAME) != bool(self.SMTP_PASSWORD):
+            raise ValueError("Missing SMTP credential field")
+
+
+        return self
+
+    @property
+    def smtp_requires_auth(self) -> bool:
+        return bool(self.SMTP_USERNAME and self.SMTP_PASSWORD)
 
 env = ENV()

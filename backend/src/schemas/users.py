@@ -6,6 +6,12 @@ class UpdateUser(BaseModel):
     email: EmailStr | None = None
     display_name: str | None = None
 
+class UpdatePasswordRequest(BaseModel):
+    new_password: str
+
+class UpdateEmailRequest(BaseModel):
+    new_email: str
+
 class UserResponse(BaseModel):
     id: UUID
     email: EmailStr
