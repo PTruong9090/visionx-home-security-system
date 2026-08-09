@@ -13,7 +13,7 @@ async def get_current_user(access_token: str | None = Cookie(default=None), db: 
         )
     
     auth_service = AuthService()
-    user_id = auth_service.decode_access_token(access_token)
+    user_id, token_version = auth_service.decode_access_token(access_token)
 
     user = await db.get(User, user_id)
 
@@ -21,6 +21,12 @@ async def get_current_user(access_token: str | None = Cookie(default=None), db: 
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User no longer exists"
+        )
+
+    if token_version != user.token_version:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Your session has ended"
         )
     
     return user

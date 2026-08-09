@@ -103,6 +103,7 @@ async def reset_password(data: PasswordResetRequest, db: AsyncSession = Depends(
 
     user.password_hash = auth_service.hash_password(data.new_password)
     user.password_changed_at = now
+    user.token_version += 1
 
     # Set used at and revoke token
     reset_token.used_at = now

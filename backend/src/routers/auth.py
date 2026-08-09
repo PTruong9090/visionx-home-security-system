@@ -48,7 +48,7 @@ async def login(data: LoginRequest, response: Response, db: AsyncSession = Depen
             detail="Invalid email or password",
         )
     
-    access_token = auth_service.create_access_token(user.id)
+    access_token = auth_service.create_access_token(user.id, user.token_version)
 
     set_auth_cookies(response, access_token)
     
@@ -81,7 +81,7 @@ async def signup(data: SignupRequest, response: Response, db: AsyncSession = Dep
     await db.commit()
     await db.refresh(user)
 
-    access_token = auth_service.create_access_token(user.id)
+    access_token = auth_service.create_access_token(user.id, user.token_version)
 
     set_auth_cookies(response, access_token)
 
