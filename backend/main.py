@@ -28,7 +28,7 @@ app.add_middleware(
 )
 
 app.include_router(auth.router)
-app.include_router(reset_password.router,)
+app.include_router(reset_password.router)
 
 app.include_router(
     cameras.router,

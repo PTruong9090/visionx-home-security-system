@@ -64,7 +64,6 @@ async def forgot_password(data: ForgotPasswordRequest, background_tasks: Backgro
         )
 
 
-
     return PasswordResetResponse(
         message="If an account exists with that email, a reset link has been sent."
     )

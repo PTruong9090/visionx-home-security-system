@@ -28,7 +28,6 @@ class ENV(BaseSettings):
     SMTP_FROM_EMAIL: EmailStr
     SMTP_FROM_NAME: str = "VisionX"
     SMTP_STARTTLS: bool = True
-    SMTP_USETLS: bool = False
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -69,15 +68,26 @@ class ENV(BaseSettings):
 
     @model_validator(mode="after")
     def _check_smtp_tls(self):
-
-        if self.SMTP_STARTTLS and self.SMTP_PORT == 465:
-            raise ValueError("SMTP_PORT cannot be 465 when using STARTTLS")
+        if self.SMTP_PORT == 465:
+            raise ValueError("Implicit TLS on 465 is not supported, use 587 with STARTTLS")
 
         if not self.SMTP_STARTTLS and (self.SMTP_USERNAME or self.SMTP_PASSWORD):
-            raise ValueError("TLS is off, leave both credentials empty")
+            raise ValueError(
+                "SMTP credentials are set but SMTP_STARTTLS is false, which would send "
+                "them in plaintext. Enable SMTP_STARTTLS, or clear SMTP_USERNAME and "
+                "SMTP_PASSWORD."
+            )
 
         if bool(self.SMTP_USERNAME) != bool(self.SMTP_PASSWORD):
-            raise ValueError("Missing SMTP credential field")
+            missing, present = (
+                ("SMTP_USERNAME", "SMTP_PASSWORD")
+                if not self.SMTP_USERNAME
+                else ("SMTP_PASSWORD", "SMTP_USERNAME")
+            )
+            raise ValueError(
+                f"{missing} is empty but {present} is set. SMTP credentials must be "
+                "provided together, or both left empty for a server that takes no auth."
+            )
 
 
         return self

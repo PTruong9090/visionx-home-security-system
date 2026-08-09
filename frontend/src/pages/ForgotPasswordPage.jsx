@@ -2,15 +2,30 @@ import { useState } from "react"
 import { Link } from "react-router-dom"
 import { ArrowLeft, Mail, MailCheck } from "lucide-react"
 
+import { sendForgotPassword } from "../api/authAPI"
+import { messageForError } from "../api/errorMessage"
+
 import AuthLayout from "../components/auths/AuthLayout"
 
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState("")
     const [submitted, setSubmitted] = useState(false)
+    const [ error, setError ] = useState("") 
 
-    function handleSubmit(e) {
+    async function handleSubmit(e) {
         e.preventDefault()
         setSubmitted(true)
+        setError("")
+        console.log("testing")
+
+        try {
+            await sendForgotPassword({
+                email: email
+            })
+
+        } catch (err) {
+            setError(messageForError(err))
+        }
     }
 
     return (

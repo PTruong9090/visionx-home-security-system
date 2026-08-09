@@ -24,3 +24,10 @@ export function logout() {
         method: "POST",
     })
 }
+
+export function sendForgotPassword(email) {
+    return request('auth/forgot-password', {
+        method: "POST",
+        body: JSON.stringify(email)
+    })
+}
