@@ -29,6 +29,8 @@ class ENV(BaseSettings):
     SMTP_FROM_NAME: str = "VisionX"
     SMTP_STARTTLS: bool = True
 
+    REDIS_URL: str
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

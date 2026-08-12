@@ -20,4 +20,5 @@ dependencies = [
     "uvicorn>=0.51.0",
     "apscheduler>=3.11.3",
     "aiosmtplib>=5.1.2",
+    "redis>=8.1.0",
 ]

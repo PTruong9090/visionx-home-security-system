@@ -41,7 +41,10 @@
       "Bash(echo \"exit=$?\")",
       "Bash(dig +short mail.phuctruong.dev._report._dmarc.gmail.com TXT @1.1.1.1)",
       "Bash(dig +short phuctruong.dev MX @1.1.1.1)",
-      "Bash(python3 -c \"import pydantic, pydantic_settings; print\\('pydantic', pydantic.VERSION\\)\")"
+      "Bash(python3 -c \"import pydantic, pydantic_settings; print\\('pydantic', pydantic.VERSION\\)\")",
+      "Bash(python3 *)",
+      "Bash(./venv/bin/python -c ' *)",
+      "Bash(command -v uv)"
     ]
   }
 }

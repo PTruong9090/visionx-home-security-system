@@ -11,6 +11,7 @@ services:
       - ./docker/go2rtc/go2rtc.yaml:/config/go2rtc.yaml
     restart: unless-stopped
 
+
   mailpit:
     image: axllent/mailpit
     container_name: visionx-mailpit
@@ -18,7 +19,16 @@ services:
       - dev
     restart: unless-stopped
     ports:
-      - 8025:8025
-      - 1025:1025
+      - "8025:8025"
+      - "1025:1025"
     environment:
       MP_MAX_MESSAGES: 5000
+
+
+  visionx-redis:
+    image: redis:8-alpine
+    container_name: visionx-redis
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6379:6379"
+    command: redis-server --save "" --appendonly no

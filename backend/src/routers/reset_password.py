@@ -1,8 +1,9 @@
 import secrets
 import hashlib
 from datetime import datetime, timezone, timedelta
+from redis.asyncio import Redis
 
-from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, Request
 from sqlalchemy import select, update, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,6 +14,10 @@ from src.models.reset_password import ResetPasswordToken
 from src.schemas.reset_password import PasswordResetRequest, PasswordResetResponse, ForgotPasswordRequest
 from src.services.auth_services import AuthService
 from src.services.email_service import send_password_reset_email
+from src.dependencies.redis import get_redis
+from src.services.rate_limit_service import check_rate_limit, FORGOT_PASSWORD_EMAIL_LIMIT, FORGOT_PASSWORD_IP_LIMIT
+
+RESET_MESSAGE = "If an account exists with that email, a reset link has been sent."
 
 router = APIRouter(
     prefix="/api/v1/auth",
@@ -22,10 +27,25 @@ router = APIRouter(
 auth_service = AuthService()
 
 @router.post('/forgot-password', response_model=PasswordResetResponse, status_code=status.HTTP_200_OK)
-async def forgot_password(data: ForgotPasswordRequest, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
+async def forgot_password(data: ForgotPasswordRequest, request: Request, background_tasks: BackgroundTasks, redis: Redis = Depends(get_redis), db: AsyncSession = Depends(get_db)):
     now = datetime.now(timezone.utc)
 
+    client_ip = request.client.host if request.client else "unknown"
     normalized_email = data.email.strip().lower()
+
+    allowed_ip = await check_rate_limit(redis, FORGOT_PASSWORD_IP_LIMIT, client_ip)
+
+    if not allowed_ip:
+        return PasswordResetResponse(
+            message=RESET_MESSAGE
+        )
+
+    allowed_email = await check_rate_limit(redis, FORGOT_PASSWORD_EMAIL_LIMIT, normalized_email)
+    if not allowed_email:
+        return PasswordResetResponse(
+            message=RESET_MESSAGE
+        )
+
     # Verify Email
     res = await db.execute(select(User).where(User.email == normalized_email))
     user = res.scalar_one_or_none()
@@ -65,7 +85,7 @@ async def forgot_password(data: ForgotPasswordRequest, background_tasks: Backgro
 
 
     return PasswordResetResponse(
-        message="If an account exists with that email, a reset link has been sent."
+        message=RESET_MESSAGE
     )
 
 
