@@ -1,6 +1,7 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status, Response
+from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
+from redis.asyncio import Redis
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,6 +10,8 @@ from src.models.user import User
 from src.database import get_db
 
 from src.services.auth_services import AuthService
+from src.dependencies.redis import get_redis
+from src.services.rate_limit_service import check_rate_limit, clear_rate_limit, LOGIN_EMAIL_LIMIT, LOGIN_IP_LIMIT, SIGNUP_IP_LIMIT
 
 from src.config.config import env
 
@@ -24,8 +27,28 @@ auth_service = AuthService()
 
 
 @router.post('/login', response_model=AuthResponse, status_code=status.HTTP_200_OK)
-async def login(data: LoginRequest, response: Response, db: AsyncSession = Depends(get_db)):
+async def login(data: LoginRequest, response: Response, request: Request, redis: Redis = Depends(get_redis), db: AsyncSession = Depends(get_db)):
     normalized_email = data.email.strip().lower()
+
+    client_ip = request.client.host if request.client else "unknown"
+
+    allowed_ip, ip_retry_after = await check_rate_limit(redis, LOGIN_IP_LIMIT, client_ip)
+
+    if not allowed_ip:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many attempts, try again later",
+            headers={"Retry-After": str(ip_retry_after)}
+        )
+
+    allowed_email, email_retry_after = await check_rate_limit(redis, LOGIN_EMAIL_LIMIT, normalized_email)
+
+    if not allowed_email:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many attempts, try again later",
+            headers={"Retry-After": str(email_retry_after)}
+        )
 
     res = await db.execute(select(User).where(normalized_email == User.email))
     
@@ -47,6 +70,8 @@ async def login(data: LoginRequest, response: Response, db: AsyncSession = Depen
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
         )
+
+    await clear_rate_limit(redis, LOGIN_EMAIL_LIMIT, normalized_email)
     
     access_token = auth_service.create_access_token(user.id, user.token_version)
 
@@ -59,8 +84,20 @@ async def login(data: LoginRequest, response: Response, db: AsyncSession = Depen
 
 
 @router.post('/signup', response_model=AuthResponse, status_code=status.HTTP_201_CREATED)
-async def signup(data: SignupRequest, response: Response, db: AsyncSession = Depends(get_db)):
+async def signup(data: SignupRequest, response: Response, request: Request, redis: Redis = Depends(get_redis), db: AsyncSession = Depends(get_db)):
     normalized_email = data.email.strip().lower()
+
+    client_ip = request.client.host if request.client else "unknown"
+
+    allowed_ip, ip_retry_after = await check_rate_limit(redis, SIGNUP_IP_LIMIT, client_ip)
+
+    if not allowed_ip:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many attempts, try again later",
+            headers={"Retry-After": str(ip_retry_after)}
+        )
+
     res = await db.execute(select(User).where(normalized_email == User.email))
 
     if res.scalar_one_or_none() is not None:

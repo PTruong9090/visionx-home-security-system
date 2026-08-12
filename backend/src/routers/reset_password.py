@@ -33,14 +33,14 @@ async def forgot_password(data: ForgotPasswordRequest, request: Request, backgro
     client_ip = request.client.host if request.client else "unknown"
     normalized_email = data.email.strip().lower()
 
-    allowed_ip = await check_rate_limit(redis, FORGOT_PASSWORD_IP_LIMIT, client_ip)
+    allowed_ip, _ = await check_rate_limit(redis, FORGOT_PASSWORD_IP_LIMIT, client_ip)
 
     if not allowed_ip:
         return PasswordResetResponse(
             message=RESET_MESSAGE
         )
 
-    allowed_email = await check_rate_limit(redis, FORGOT_PASSWORD_EMAIL_LIMIT, normalized_email)
+    allowed_email, _ = await check_rate_limit(redis, FORGOT_PASSWORD_EMAIL_LIMIT, normalized_email)
     if not allowed_email:
         return PasswordResetResponse(
             message=RESET_MESSAGE

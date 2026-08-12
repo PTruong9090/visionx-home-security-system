@@ -15,6 +15,9 @@ logger = logging.getLogger(__name__)
 class RateLimitScope(StrEnum):
     FORGOT_PASSWORD_IP = "forgot_password_ip"
     FORGOT_PASSWORD_EMAIL = "forgot_password_email"
+    LOGIN_EMAIL = "login_email"
+    LOGIN_IP = "login_ip"
+    SIGNUP_IP = "signup_ip"
 
 
 @dataclass(frozen=True)
@@ -51,19 +54,53 @@ FORGOT_PASSWORD_IP_LIMIT = RateLimitPolicy(
 )
 
 
-async def check_rate_limit(redis: Redis, policy: RateLimitPolicy, key: str) -> bool:
-    window_sec = int(policy.window.total_seconds())
-    digest = hashlib.sha256(f"{policy.scope}:{key}".encode()).hexdigest()
+LOGIN_EMAIL_LIMIT = RateLimitPolicy(
+    scope=RateLimitScope.LOGIN_EMAIL,
+    limit=5,
+    window=timedelta(minutes=15),
+    silent=False,
+    fail_open=False
+)
 
-    redis_key = f"rl:{policy.scope}:{digest}"
+
+LOGIN_IP_LIMIT = RateLimitPolicy(
+    scope=RateLimitScope.LOGIN_IP,
+    limit=20,
+    window=timedelta(minutes=15),
+    silent=False,
+    fail_open=False
+)
+
+
+SIGNUP_IP_LIMIT = RateLimitPolicy(
+    scope=RateLimitScope.SIGNUP_IP,
+    limit=3,
+    window=timedelta(hours=1),
+    silent=False,
+    fail_open=False
+)
+
+
+def _build_redis_key(policy: RateLimitPolicy, key: str) -> str:
+    digest = hashlib.sha256(f"{policy.scope}:{key}".encode()).hexdigest
+
+    return f"rl:{policy.scope}:{digest}"
+
+
+async def check_rate_limit(redis: Redis, policy: RateLimitPolicy, key: str) -> tuple[bool, int | None]:
+    window_sec = int(policy.window.total_seconds())
+    redis_key = _build_redis_key(policy, key)
 
     try:
         async with redis.pipeline(transaction=True) as pipe:
             pipe.incr(redis_key)
             pipe.expire(redis_key, window_sec, nx=True)
-            count, _ = await pipe.execute()
+            pipe.ttl(redis_key)
+            count, _, ttl = await pipe.execute()
 
-        return count <= policy.limit
+        allowed = count <= policy.limit
+
+        return allowed, None if allowed else max(1, ttl)
 
     except RedisError:
         logger.exception(
@@ -71,4 +108,17 @@ async def check_rate_limit(redis: Redis, policy: RateLimitPolicy, key: str) -> b
             policy.scope,
         )
 
-        return policy.fail_open
+        return policy.fail_open, None
+
+
+async def clear_rate_limit(redis: Redis, policy: RateLimitPolicy, key: str):
+    redis_key = _build_redis_key(policy, key)
+
+    try:
+        await redis.delete(redis_key)
+
+    except RedisError:
+        logger.exception(
+            "Failed to clear rate-limit counter for scope=%s",
+            policy.scope
+        )
