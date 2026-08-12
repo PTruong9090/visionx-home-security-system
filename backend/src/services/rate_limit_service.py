@@ -82,7 +82,7 @@ SIGNUP_IP_LIMIT = RateLimitPolicy(
 
 
 def _build_redis_key(policy: RateLimitPolicy, key: str) -> str:
-    digest = hashlib.sha256(f"{policy.scope}:{key}".encode()).hexdigest
+    digest = hashlib.sha256(f"{policy.scope}:{key}".encode()).hexdigest()
 
     return f"rl:{policy.scope}:{digest}"
 
@@ -108,7 +108,10 @@ async def check_rate_limit(redis: Redis, policy: RateLimitPolicy, key: str) -> t
             policy.scope,
         )
 
-        return policy.fail_open, None
+        if policy.fail_open:
+            return True, None
+
+        return False, window_sec
 
 
 async def clear_rate_limit(redis: Redis, policy: RateLimitPolicy, key: str):
