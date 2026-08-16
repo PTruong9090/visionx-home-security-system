@@ -50,46 +50,27 @@ async def forgot_password(data: ForgotPasswordRequest, request: Request, backgro
     res = await db.execute(select(User).where(User.email == normalized_email))
     user = res.scalar_one_or_none()
 
-    token_expiration_max = now + timedelta(minutes=(env.RESET_TOKEN_EXPIRE_MINUTES / 2))
-
     if user:
-        # Reuse old unexpired tokens
-        res_old_token = await db.execute(select(ResetPasswordToken).where(
-            ResetPasswordToken.user_id == user.id,
-            ResetPasswordToken.used_at.is_(None),
-            ResetPasswordToken.revoked_at.is_(None),
-            ResetPasswordToken.expires_at >= token_expiration_max
-        ).order_by(ResetPasswordToken.expires_at).limit(1))
+        # Nothing is revoked on send: outstanding tokens are left valid so that
+        # repeated requests cannot invalidate a link already sitting in the user's
+        # inbox. Redemption in reset_password() revokes all others.
+        raw_token = secrets.token_urlsafe(32)
 
-        old_token = res_old_token.scalars().first()
+        # Store token in DB
+        token_hash = hashlib.sha256(raw_token.encode()).hexdigest()
 
-        if not old_token:
-            # # Revoke all old tokens
-            # await db.execute(update(ResetPasswordToken.token_hash).where(
-            #     ResetPasswordToken.user_id == user.id,
-            #     ResetPasswordToken.used_at.is_(None),
-            #     ResetPasswordToken.revoked_at.is_(None),
-            # ).values(revoked_at=now))
+        reset_token = ResetPasswordToken(
+            user_id=user.id,
+            token_hash=token_hash,
+            expires_at=now + timedelta(minutes=env.RESET_TOKEN_EXPIRE_MINUTES),
+        )
 
-            # Create new token
-            raw_token = secrets.token_urlsafe(32)
+        db.add(reset_token)
 
-            # Store token in DB
-            token_hash = hashlib.sha256(raw_token.encode()).hexdigest()
-
-            reset_token = ResetPasswordToken(
-                user_id=user.id,
-                token_hash=token_hash,
-                expires_at=now + timedelta(minutes=env.RESET_TOKEN_EXPIRE_MINUTES),
-            )
-
-            db.add(reset_token)
-
-            await db.commit()
-
+        await db.commit()
 
         # Send message with token
-        reset_url = f"{env.FRONTEND_URL}/reset-password?token={raw_token if raw_token else old_token}"
+        reset_url = f"{env.FRONTEND_URL}/reset-password?token={raw_token}"
 
         background_tasks.add_task(
             send_password_reset_email,
