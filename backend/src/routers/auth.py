@@ -1,8 +1,6 @@
-from uuid import UUID
-
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
 from redis.asyncio import Redis
-from sqlalchemy import select, func
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.schemas.auth import AuthResponse, LoginRequest, SignupRequest, AuthUserResponse
@@ -11,9 +9,7 @@ from src.database import get_db
 
 from src.services.auth_services import AuthService
 from src.dependencies.redis import get_redis
-from src.services.rate_limit_service import check_rate_limit, clear_rate_limit, LOGIN_EMAIL_LIMIT, LOGIN_IP_LIMIT, SIGNUP_IP_LIMIT
-
-from src.config.config import env
+from src.services.rate_limit_service import check_rate_limit, clear_rate_limits, peek_rate_limits, record_rate_limit_failures, LOGIN_EMAIL_LIMIT, LOGIN_IP_LIMIT, SIGNUP_IP_LIMIT, LOGIN_EMAIL_IP_LIMIT
 
 from src.utils.cookies import set_auth_cookies, clear_auth_cookies
 
@@ -29,25 +25,27 @@ auth_service = AuthService()
 @router.post('/login', response_model=AuthResponse, status_code=status.HTTP_200_OK)
 async def login(data: LoginRequest, response: Response, request: Request, redis: Redis = Depends(get_redis), db: AsyncSession = Depends(get_db)):
     normalized_email = data.email.strip().lower()
-
     client_ip = request.client.host if request.client else "unknown"
 
-    allowed_ip, ip_retry_after = await check_rate_limit(redis, LOGIN_IP_LIMIT, client_ip)
+    email_ip = f"{normalized_email}|{client_ip}"
 
-    if not allowed_ip:
+    email_checks = [
+        (LOGIN_EMAIL_LIMIT, normalized_email),
+        (LOGIN_EMAIL_IP_LIMIT, email_ip),
+    ]
+
+    checks = [
+        (LOGIN_IP_LIMIT, client_ip),
+        *email_checks
+    ]
+
+    allowed, retry_after = await peek_rate_limits(redis, checks)
+
+    if not allowed:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="Too many attempts, try again later",
-            headers={"Retry-After": str(ip_retry_after)}
-        )
-
-    allowed_email, email_retry_after = await check_rate_limit(redis, LOGIN_EMAIL_LIMIT, normalized_email)
-
-    if not allowed_email:
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Too many attempts, try again later",
-            headers={"Retry-After": str(email_retry_after)}
+            headers={"Retry-After": str(retry_after)}
         )
 
     res = await db.execute(select(User).where(normalized_email == User.email))
@@ -55,6 +53,8 @@ async def login(data: LoginRequest, response: Response, request: Request, redis:
     user = res.scalar_one_or_none()
 
     if not user:
+        await record_rate_limit_failures(redis, checks)
+
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password"
@@ -66,12 +66,16 @@ async def login(data: LoginRequest, response: Response, request: Request, redis:
     )
 
     if not password_is_correct:
+        await record_rate_limit_failures(redis, checks)
+        
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
         )
 
-    await clear_rate_limit(redis, LOGIN_EMAIL_LIMIT, normalized_email)
+    # Do not clear LOGIN_IP: successful authentication only proves ownership
+    # of this account, not that the source IP's prior behavior was legitimate.
+    await clear_rate_limits(redis, email_checks)
     
     access_token = auth_service.create_access_token(user.id, user.token_version)
 
@@ -97,6 +101,8 @@ async def signup(data: SignupRequest, response: Response, request: Request, redi
             detail="Too many attempts, try again later",
             headers={"Retry-After": str(ip_retry_after)}
         )
+
+    
 
     res = await db.execute(select(User).where(normalized_email == User.email))
 

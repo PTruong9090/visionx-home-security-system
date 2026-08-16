@@ -15,7 +15,7 @@ from src.schemas.reset_password import PasswordResetRequest, PasswordResetRespon
 from src.services.auth_services import AuthService
 from src.services.email_service import send_password_reset_email
 from src.dependencies.redis import get_redis
-from src.services.rate_limit_service import check_rate_limit, FORGOT_PASSWORD_EMAIL_LIMIT, FORGOT_PASSWORD_IP_LIMIT
+from src.services.rate_limit_service import check_rate_limit, FORGOT_PASSWORD_EMAIL_LIMIT, FORGOT_PASSWORD_IP_LIMIT, RESET_PASSWORD_IP_LIMIT
 
 RESET_MESSAGE = "If an account exists with that email, a reset link has been sent."
 
@@ -50,32 +50,46 @@ async def forgot_password(data: ForgotPasswordRequest, request: Request, backgro
     res = await db.execute(select(User).where(User.email == normalized_email))
     user = res.scalar_one_or_none()
 
+    token_expiration_max = now + timedelta(minutes=(env.RESET_TOKEN_EXPIRE_MINUTES / 2))
+
     if user:
-        # Revoke all old tokens
-        await db.execute(update(ResetPasswordToken).where(
+        # Reuse old unexpired tokens
+        res_old_token = await db.execute(select(ResetPasswordToken).where(
             ResetPasswordToken.user_id == user.id,
             ResetPasswordToken.used_at.is_(None),
             ResetPasswordToken.revoked_at.is_(None),
-        ).values(revoked_at=now))
+            ResetPasswordToken.expires_at >= token_expiration_max
+        ).order_by(ResetPasswordToken.expires_at).limit(1))
 
-        # Create token
-        raw_token = secrets.token_urlsafe(32)
+        old_token = res_old_token.scalars().first()
 
-        # Store token in DB
-        token_hash = hashlib.sha256(raw_token.encode()).hexdigest()
+        if not old_token:
+            # # Revoke all old tokens
+            # await db.execute(update(ResetPasswordToken.token_hash).where(
+            #     ResetPasswordToken.user_id == user.id,
+            #     ResetPasswordToken.used_at.is_(None),
+            #     ResetPasswordToken.revoked_at.is_(None),
+            # ).values(revoked_at=now))
 
-        reset_token = ResetPasswordToken(
-            user_id=user.id,
-            token_hash=token_hash,
-            expires_at=now + timedelta(minutes=env.RESET_TOKEN_EXPIRE_MINUTES),
-        )
+            # Create new token
+            raw_token = secrets.token_urlsafe(32)
 
-        db.add(reset_token)
+            # Store token in DB
+            token_hash = hashlib.sha256(raw_token.encode()).hexdigest()
 
-        await db.commit()
+            reset_token = ResetPasswordToken(
+                user_id=user.id,
+                token_hash=token_hash,
+                expires_at=now + timedelta(minutes=env.RESET_TOKEN_EXPIRE_MINUTES),
+            )
+
+            db.add(reset_token)
+
+            await db.commit()
+
 
         # Send message with token
-        reset_url = f"{env.FRONTEND_URL}/reset-password?token={raw_token}"
+        reset_url = f"{env.FRONTEND_URL}/reset-password?token={raw_token if raw_token else old_token}"
 
         background_tasks.add_task(
             send_password_reset_email,
@@ -83,15 +97,25 @@ async def forgot_password(data: ForgotPasswordRequest, request: Request, backgro
             reset_url
         )
 
-
     return PasswordResetResponse(
         message=RESET_MESSAGE
     )
 
 
 @router.post('/reset-password', response_model=PasswordResetResponse)
-async def reset_password(data: PasswordResetRequest, db: AsyncSession = Depends(get_db)):
+async def reset_password(data: PasswordResetRequest, request: Request, redis: Redis = Depends(get_redis), db: AsyncSession = Depends(get_db)):
     now = datetime.now(timezone.utc)
+
+    client_ip = request.client.host if request.client else "unknown"
+    allowed_ip, retry_after = await check_rate_limit(redis, RESET_PASSWORD_IP_LIMIT, client_ip)
+
+    if not allowed_ip:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many attempts, try again later",
+            headers={"Retry-After": str(retry_after)}
+        )
+
 
     # Verify token (check if its valid and not revoked)
     token_hash = hashlib.sha256(data.token.encode()).hexdigest()
