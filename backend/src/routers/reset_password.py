@@ -15,7 +15,7 @@ from src.schemas.reset_password import PasswordResetRequest, PasswordResetRespon
 from src.services.auth_services import AuthService
 from src.services.email_service import send_password_reset_email
 from src.dependencies.redis import get_redis
-from src.services.rate_limit_service import check_rate_limit, FORGOT_PASSWORD_EMAIL_LIMIT, FORGOT_PASSWORD_IP_LIMIT, RESET_PASSWORD_IP_LIMIT
+from src.services.rate_limit_service import check_rate_limit, try_acquire_send_slot, FORGOT_PASSWORD_SEND_COOLDOWN, FORGOT_PASSWORD_EMAIL_LIMIT, FORGOT_PASSWORD_IP_LIMIT, RESET_PASSWORD_IP_LIMIT
 
 RESET_MESSAGE = "If an account exists with that email, a reset link has been sent."
 
@@ -40,11 +40,19 @@ async def forgot_password(data: ForgotPasswordRequest, request: Request, backgro
             message=RESET_MESSAGE
         )
 
+    acquired = await try_acquire_send_slot(redis, FORGOT_PASSWORD_SEND_COOLDOWN, normalized_email)
+    if not acquired:
+        return PasswordResetResponse(
+            message=RESET_MESSAGE
+        )
+
     allowed_email, _ = await check_rate_limit(redis, FORGOT_PASSWORD_EMAIL_LIMIT, normalized_email)
     if not allowed_email:
         return PasswordResetResponse(
             message=RESET_MESSAGE
         )
+
+    
 
     # Verify Email
     res = await db.execute(select(User).where(User.email == normalized_email))

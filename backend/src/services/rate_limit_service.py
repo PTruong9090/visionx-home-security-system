@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 class RateLimitScope(StrEnum):
     FORGOT_PASSWORD_IP = "forgot_password_ip"
     FORGOT_PASSWORD_EMAIL = "forgot_password_email"
+    FORGOT_PASSWORD_EMAIL_COOLDOWN = "forgot_password_email_cooldown"
     RESET_PASSWORD_IP = "reset_password_ip"
     LOGIN_EMAIL = "login_email"
     LOGIN_IP = "login_ip"
@@ -44,10 +45,18 @@ RateLimitCheck = tuple[RateLimitPolicy, str]
 
 FORGOT_PASSWORD_EMAIL_LIMIT = RateLimitPolicy(
     scope=RateLimitScope.FORGOT_PASSWORD_EMAIL,
-    limit=3,
+    limit=10,
     window=timedelta(hours=1),
     silent=True,
     fail_open=False,
+)
+
+FORGOT_PASSWORD_SEND_COOLDOWN = RateLimitPolicy(
+    scope=RateLimitScope.FORGOT_PASSWORD_EMAIL_COOLDOWN,
+    limit=1,
+    window=timedelta(seconds=90),
+    silent=True,
+    fail_open=False
 )
 
 
@@ -182,6 +191,22 @@ async def record_rate_limit_failures(redis: Redis, checks: Sequence[RateLimitChe
         await record_rate_limit_failure(redis, policy, key)
 
 
+async def try_acquire_send_slot(redis: Redis, policy: RateLimitPolicy, key: str) -> bool:
+    window_sec = int(policy.window.total_seconds())
+    redis_key = _build_redis_key(policy, key)
+
+    try:
+        acquired = await redis.set(redis_key, "1", ex=window_sec, nx=True)
+
+        return bool(acquired)
+
+    except RedisError:
+        logger.exception(
+            "Redis cooldown acquire failed for scope=%s",
+            policy.scope,
+        )
+
+        return policy.fail_open
 
 
 # USED FOR THROTTLE REQUESTS (ATOMIC)
@@ -210,8 +235,7 @@ async def check_rate_limit(redis: Redis, policy: RateLimitPolicy, key: str) -> t
             return True, None
 
         return False, window_sec
-
-
+    
 
 async def clear_rate_limit(redis: Redis, policy: RateLimitPolicy, key: str):
     redis_key = _build_redis_key(policy, key)
