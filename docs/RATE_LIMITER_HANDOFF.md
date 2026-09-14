@@ -16,8 +16,15 @@ Legend: `[ ]` open, `[x]` done, `[~]` in progress.
 
 ## State at handoff
 
-Items 1, 2, and 3a are committed. **3b is the next thing to write.** Nothing here
-has been run against a live server yet - the changes are compile-checked only.
+Updated 2026-09-13. Items 1, 2, 3a, and 3b are all committed. Section 3 is now
+closed and everything remaining is in Backlog.
+
+Still not verified against a live server. The app imports and boots, and
+`try_acquire_send_slot` was exercised against a stand-in Redis (claim, re-claim
+refused, other address unaffected, 90s TTL attached, slot freed after expiry, bool
+returned on `RedisError`). No real Redis and no real email has been through it -
+Docker is not reachable from WSL on this machine, so that is the first thing to do
+next session.
 
 ---
 
@@ -84,7 +91,7 @@ times, log into their own account, counter wiped, repeat.
 Remaining gap: `LOGIN_EMAIL` at 50/hr still *prices* a distributed lockout rather
 than eliminating it. See item 2 in Backlog.
 
-## 3. Forgot-password `[~]` - STOPPED HERE
+## 3. Forgot-password `[x]`
 
 Two independent problems. Neither is finished.
 
@@ -119,7 +126,7 @@ Also: any single-row query over outstanding tokens must now tolerate multiples.
 `.order_by(...).limit(1)` with `.scalars().first()`, not `scalar_one_or_none()`,
 which raises `MultipleResultsFound`.
 
-### 3b. Replace the email block with a send cooldown `[ ]`
+### 3b. Replace the email block with a send cooldown `[x]`
 
 `FORGOT_PASSWORD_EMAIL_LIMIT` is still a 3/hour hard block. That is the original
 lockout, untouched: an attacker burns three requests and the victim's genuine reset
@@ -155,11 +162,57 @@ suppressed one.
 Suppression is free once 3a lands: the recipient's earlier link is still live, so
 nothing is denied.
 
+**As built:**
+
+- New scope `FORGOT_PASSWORD_EMAIL_COOLDOWN` and policy `FORGOT_PASSWORD_SEND_COOLDOWN`,
+  90s. Claimed by `try_acquire_send_slot()`, which is a single
+  `SET key "1" NX EX <window>`. Returns a plain `bool`, not the `(allowed, retry_after)`
+  tuple the other functions return, because nothing is ever told to the user here -
+  the suppressed response is byte-identical to the sent one.
+- `FORGOT_PASSWORD_EMAIL_LIMIT` retuned from a 3/hour block to a 10/hour mail ceiling.
+  Still `check_rate_limit`, still `silent`.
+- `FORGOT_PASSWORD_IP_LIMIT` untouched.
+- On `RedisError` the slot function returns `policy.fail_open` (`False`), so a Redis
+  outage suppresses sends. Note this is fail-closed for the *opposite* reason to the
+  login limiter: there it protects accounts, here it protects outbound mail volume.
+
+**Why one command instead of a pipeline.** `NX` makes the check and the write a single
+atomic step, so unlike the login peek/record split there is no window for concurrent
+requests to both decide they may send. This function genuinely has no overshoot
+caveat - do not "fix" it to match the others.
+
+**No `ttl == -1` repair needed here.** That guard exists in `peek_rate_limit` because
+`INCR` creates the key and `EXPIRE` attaches the timer as separate commands, leaving a
+crash window where a key has no countdown and blocks forever. `SET ... EX` creates the
+key and its timer together, so the stuck state is unreachable by construction.
+
+**Ordering is load-bearing: cooldown first, ceiling second.** `check_rate_limit`
+increments on arrival, whether or not mail follows. Trace 360 requests/hour at one
+address:
+
+- cooldown first: ~1 per 90s reaches the counter, 10 mails go out, all to the victim,
+  all with live links.
+- ceiling first: all 360 hit the counter, it exhausts inside two minutes having sent
+  only 1-2 mails, and the victim is refused for the remaining 58 minutes.
+
+The second is the original lockout with a bigger number. Cooldown first means the
+hourly counter only ever counts requests that actually sent.
+
+Both checks run before the `select(User)` - no reason to do work that gets discarded.
+
+**Known limitation, accepted.** TTL gives a fixed window, not a sliding one, so the
+hourly ceiling can pass ~20 mails across an hour boundary. Acceptable because the
+cooldown forces 90s spacing (reaching 10 takes 15 minutes of sustained effort) and
+because the thing being bounded is mail volume, not access. A true sliding window
+would need a sorted set of timestamps; not worth it here.
+
 ---
 
 ## Backlog
 
-1. **Do not wire `SIGNUP_EMAIL_LIMIT`.** It is defined but unused, deliberately. An
+1. **Do not wire a signup-email limit.** (Re-read 2026-09-13: no such policy exists -
+   only the unused enum member `RateLimitScope.SIGNUP_EMAIL`. Deleting that member is
+   the whole cleanup.) The reasoning stands: An
    email at signup has no account behind it, so a blocking counter on it lets anyone
    permanently deny registration for any address they can guess. The attack is
    cheaper than the abuse it prevents. Per-IP plus eventual CAPTCHA and email
@@ -182,10 +235,14 @@ nothing is denied.
 5. **No tests anywhere in `backend/`.** The service is pure enough to unit test with
    fakeredis: window rollover, fail-closed on `RedisError`, `Retry-After` values, the
    `ttl == -1` repair, clear-on-success touching email scopes but not IP.
-6. **Cleanup.** Unused `UUID` import in `auth.py:1`. Empty
-   `backend/src/models/rate_limit.py` (committed by accident in `c489747`). The
-   `silent` field is set on four policies and read nowhere - each caller
-   hand-implements the behavior, so the field is decorative.
+6. **Cleanup.** Empty `backend/src/models/rate_limit.py` (committed by accident in
+   `c489747`). The `silent` field is set on five policies and read nowhere - each
+   caller hand-implements the behavior, so the field is decorative. Same for `limit`
+   on `FORGOT_PASSWORD_SEND_COOLDOWN`: `try_acquire_send_slot` never reads it, it is
+   only there because the dataclass requires it.
+   Corrected on re-read 2026-09-13: the "unused `UUID` import in `auth.py:1`" noted
+   here does not exist - `routers/auth.py` has no `UUID` at all, and the imports in
+   `schemas/auth.py` and `services/auth_services.py` are both used.
 7. **Deferred to deployment: `request.client.host` is the proxy IP.** Behind a
    reverse proxy every request collapses to one key and the IP tiers become a global
    lockout switch. Needs trusted `X-Forwarded-For` extraction plus uvicorn
