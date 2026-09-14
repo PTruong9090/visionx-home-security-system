@@ -118,7 +118,7 @@ async def get_camera_stream(db: AsyncSession, camera_id: UUID):
     
     return {
         "camera_id": camera.id,
-        "main_stream_url": f"{env.GO2RTC_PUBLIC_URL}/stream.html?src={camera.stream_key}_main&mode=webrtc",
-        "sub_stream_url": f"{env.GO2RTC_PUBLIC_URL}/stream.html?src={camera.stream_key}_sub&mode=webrtc",
+        "main_stream_url": f"{env.GO2RTC_PUBLIC_URL}/stream.html?src={camera.stream_key}_main",
+        "sub_stream_url": f"{env.GO2RTC_PUBLIC_URL}/stream.html?src={camera.stream_key}_sub",
         "stream_type": "webrtc",
     }

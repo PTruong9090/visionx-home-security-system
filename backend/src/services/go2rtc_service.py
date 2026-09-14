@@ -13,6 +13,7 @@ class Go2RTCService:
             )
 
             response.raise_for_status()
+            print(response.json())
 
             return response.json()
 
