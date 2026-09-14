@@ -1,8 +1,8 @@
 from fastapi import Cookie, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.database import get_db
-from src.models.user import User
+from visionx_db.database import get_db
+from visionx_db.models.user import User
 from src.services.auth_services import AuthService
 
 async def get_current_user(access_token: str | None = Cookie(default=None), db: AsyncSession = Depends(get_db)) -> User:

@@ -4,8 +4,8 @@ from typing import Annotated
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.database import get_db
-from src.models.user import User
+from visionx_db.database import get_db
+from visionx_db.models.user import User
 from src.schemas.users import UserResponse, UpdatePasswordRequest, UpdateEmailRequest
 
 from src.dependencies.auth import get_current_user

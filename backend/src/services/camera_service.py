@@ -7,9 +7,9 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from src.models.camera import Camera
-from src.models.camera_health_check import CameraHealthCheck, HealthStatusEnum
-from src.models.recording import Recording
+from visionx_db.models.camera import Camera
+from visionx_db.models.camera_health_check import CameraHealthCheck, HealthStatusEnum
+from visionx_db.models.recording import Recording
 from src.config.config import env
 
 

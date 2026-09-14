@@ -8,13 +8,13 @@ from sqlalchemy import Boolean, DateTime, String, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.database import Base
+from visionx_db.database import Base
 
 if TYPE_CHECKING:
-    from src.models.recording import Recording
-    from src.models.camera_health_check import CameraHealthCheck
-    from src.models.event import Event
-    from src.models.snapshot import Snapshot
+    from visionx_db.models.recording import Recording
+    from visionx_db.models.camera_health_check import CameraHealthCheck
+    from visionx_db.models.event import Event
+    from visionx_db.models.snapshot import Snapshot
 
 
 class Camera(Base):

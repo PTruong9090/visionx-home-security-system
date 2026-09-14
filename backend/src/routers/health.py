@@ -4,9 +4,9 @@ from sqlalchemy import select
 
 from uuid import UUID
 
-from src.models import CameraHealthCheck
+from visionx_db.models import CameraHealthCheck
 from src.schemas.health import CameraHealthCheckResponse
-from src.database import get_db
+from visionx_db.database import get_db
 
 
 router = APIRouter(

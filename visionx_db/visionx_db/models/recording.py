@@ -8,12 +8,12 @@ from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, Integer, Strin
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.database import Base
+from visionx_db.database import Base
 
 if TYPE_CHECKING:
-    from src.models.camera import Camera
-    from src.models.event import Event
-    from src.models.snapshot import Snapshot
+    from visionx_db.models.camera import Camera
+    from visionx_db.models.event import Event
+    from visionx_db.models.snapshot import Snapshot
 
 class Recording(Base):
     __tablename__ = "recordings"
@@ -38,7 +38,7 @@ class Recording(Base):
     file_path: Mapped[str] = mapped_column(String, nullable=False)
     file_size_bytes: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
 
-    format: Mapped[str] = mapped_column(String, nullable=False, default="mp4")
+    format: Mapped[str] = mapped_column(String, nullable=False, default="mkv")
     status: Mapped[str] = mapped_column(String, nullable=False, default="recording")
 
     has_motion: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)

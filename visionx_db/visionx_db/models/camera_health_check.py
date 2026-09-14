@@ -9,10 +9,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import DateTime, String, ForeignKey, Text, func, Integer, Enum
 from sqlalchemy.dialects.postgresql import UUID
 
-from src.database import Base
+from visionx_db.database import Base
 
 if TYPE_CHECKING:
-    from src.models.camera import Camera
+    from visionx_db.models.camera import Camera
 
 class HealthStatusEnum(enum.Enum):
     online = "online"

@@ -6,8 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.database import get_db
-from src.models.camera import Camera
+from visionx_db.database import get_db
+from visionx_db.models.camera import Camera
 from src.schemas.camera import CameraCreate, CameraUpdate, CameraResponse
 from src.schemas.health import CameraHealthCheckResponse
 

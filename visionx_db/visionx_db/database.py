@@ -2,12 +2,12 @@
 from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
-from src.config.config import env
+from visionx_db.settings import env
 
 class Base(DeclarativeBase):
     pass
 
-engine = create_async_engine(env.DATABASE_URL, echo=True)
+engine = create_async_engine(env.DATABASE_URL, echo=env.DB_ECHO)
 
 SessionLocal  = async_sessionmaker(
     bind=engine,

@@ -21,4 +21,8 @@ dependencies = [
     "apscheduler>=3.11.3",
     "aiosmtplib>=5.1.2",
     "redis>=8.1.0",
+    "visionx-db",
 ]
+
+[tool.uv.sources]
+visionx-db = { path = "../visionx_db", editable = true }

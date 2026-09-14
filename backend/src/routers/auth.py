@@ -4,8 +4,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.schemas.auth import AuthResponse, LoginRequest, SignupRequest, AuthUserResponse
-from src.models.user import User
-from src.database import get_db
+from visionx_db.models.user import User
+from visionx_db.database import get_db
 
 from src.services.auth_services import AuthService
 from src.dependencies.redis import get_redis

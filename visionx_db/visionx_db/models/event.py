@@ -10,12 +10,12 @@ from sqlalchemy import DateTime, ForeignKey, Numeric, String, Text, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.database import Base
+from visionx_db.database import Base
 
 if TYPE_CHECKING:
-    from src.models.recording import Recording
-    from src.models.snapshot import Snapshot
-    from src.models.camera import Camera
+    from visionx_db.models.recording import Recording
+    from visionx_db.models.snapshot import Snapshot
+    from visionx_db.models.camera import Camera
 
 class Event(Base):
     __tablename__ = "events"

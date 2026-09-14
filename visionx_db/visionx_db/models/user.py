@@ -8,10 +8,10 @@ from sqlalchemy import DateTime, String, func, Integer
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.database import Base
+from visionx_db.database import Base
 
 if TYPE_CHECKING:
-    from src.models.reset_password import ResetPasswordToken
+    from visionx_db.models.reset_password import ResetPasswordToken
 
 class User(Base):
     __tablename__ = "users"

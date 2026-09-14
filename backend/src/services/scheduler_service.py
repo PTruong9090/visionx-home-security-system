@@ -6,8 +6,8 @@ import httpx
 import logging
 from datetime import datetime, timezone
 
-from src.database import SessionLocal
-from src.models.camera import Camera
+from visionx_db.database import SessionLocal
+from visionx_db.models.camera import Camera
 from src.services.camera_service import run_health_check
 
 from src.config.config import env

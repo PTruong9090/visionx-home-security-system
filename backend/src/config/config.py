@@ -4,7 +4,6 @@ from typing import Literal
 
 
 class ENV(BaseSettings):
-    DATABASE_URL: str
     ALEMBIC_DATABASE_URL: str
     GO2RTC_PUBLIC_URL: str
     CORS_ALLOWED: list[str]
@@ -34,6 +33,7 @@ class ENV(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
+        extra="ignore",
     )
 
     @field_validator("COOKIE_DOMAIN")

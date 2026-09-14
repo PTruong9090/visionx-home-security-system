@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from uuid import UUID
 from datetime import datetime
 
-from src.models.camera_health_check import HealthStatusEnum
+from visionx_db.models.camera_health_check import HealthStatusEnum
 
 
 class CameraHealthCheckResponse(BaseModel):

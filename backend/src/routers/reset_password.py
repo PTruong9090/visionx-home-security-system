@@ -8,9 +8,9 @@ from sqlalchemy import select, update, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.config import env
-from src.database import get_db
-from src.models.user import User
-from src.models.reset_password import ResetPasswordToken
+from visionx_db.database import get_db
+from visionx_db.models.user import User
+from visionx_db.models.reset_password import ResetPasswordToken
 from src.schemas.reset_password import PasswordResetRequest, PasswordResetResponse, ForgotPasswordRequest
 from src.services.auth_services import AuthService
 from src.services.email_service import send_password_reset_email

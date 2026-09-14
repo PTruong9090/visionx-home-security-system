@@ -8,12 +8,12 @@ from sqlalchemy import BigInteger, DateTime, ForeignKey, String, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.database import Base
+from visionx_db.database import Base
 
 if TYPE_CHECKING:
-    from src.models.camera import Camera
-    from src.models.event import Event
-    from src.models.recording import Recording
+    from visionx_db.models.camera import Camera
+    from visionx_db.models.event import Event
+    from visionx_db.models.recording import Recording
 
 class Snapshot(Base):
     __tablename__ = "snapshots"

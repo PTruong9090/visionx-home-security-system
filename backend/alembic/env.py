@@ -6,8 +6,8 @@ from sqlalchemy import pool
 from alembic import context
 
 from src.config.config import env
-from src.database import Base
-import src.models
+from visionx_db.database import Base
+import visionx_db.models
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
