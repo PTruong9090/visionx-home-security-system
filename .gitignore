@@ -157,3 +157,5 @@ backend.egg-info
 MVP_CHECKLIST.md
 
 CLAUDE.md
+
+storage/*
