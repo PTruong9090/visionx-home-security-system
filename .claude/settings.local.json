@@ -44,7 +44,11 @@
       "Bash(python3 -c \"import pydantic, pydantic_settings; print\\('pydantic', pydantic.VERSION\\)\")",
       "Bash(python3 *)",
       "Bash(./venv/bin/python -c ' *)",
-      "Bash(command -v uv)"
+      "Bash(command -v uv)",
+      "WebFetch(domain:community.netgear.com)",
+      "WebFetch(domain:techoverflow.net)",
+      "WebFetch(domain:www.downloads.netgear.com)",
+      "WebFetch(domain:support.biamp.com)"
     ]
   }
 }
